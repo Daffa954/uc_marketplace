@@ -28,6 +28,21 @@ class MyApp extends StatelessWidget {
       ),
       // 4. Home Page (Placeholder setelah login)
       GoRoute(path: '/home', builder: (context, state) => const HomeBuyer()),
+
+      // SELLER
+      StatefulShellRoute.indexedStack(
+      builder: (context, state, navigationShell) {
+        return SellerMainPage(navigationShell: navigationShell);
+      },
+      branches: [
+        // Dashboard Branch
+        StatefulShellBranch(
+          routes: [
+            GoRoute(path: '/seller/home', builder: (context, state) => const SellerDashboardPage()),
+          ]
+        ),
+      ]
+      ),
     ],
   );
 
