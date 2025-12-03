@@ -50,7 +50,7 @@ class _SellerDashboardPageState extends State<SellerDashboardPage> {
             width: double.infinity,
             decoration: const BoxDecoration(
               image: DecorationImage(
-                image: AssetImage('assets/food_banner.jpg'), // Use your banner image
+                image: AssetImage('assets/images/banner.png'), // Use your banner image
                 fit: BoxFit.cover,
               ),
             ),
@@ -86,7 +86,7 @@ class _SellerDashboardPageState extends State<SellerDashboardPage> {
           Expanded(
             child: Container(
               decoration: const BoxDecoration(
-                color: Color(0xFFFFD4B0),
+                color: Color(0xFFffe3c9),
                 borderRadius: BorderRadius.only(
                   topLeft: Radius.circular(30),
                   topRight: Radius.circular(30),
@@ -153,7 +153,7 @@ class _SellerDashboardPageState extends State<SellerDashboardPage> {
             style: TextStyle(
               fontSize: 16,
               fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-              color: Colors.black87,
+              color: const Color(0xFF593A1D),
             ),
           ),
           const SizedBox(height: 4),
@@ -161,7 +161,7 @@ class _SellerDashboardPageState extends State<SellerDashboardPage> {
             Container(
               height: 2,
               width: 40,
-              color: Colors.black87,
+              color: const Color(0xFF593A1D),
             ),
         ],
       ),
@@ -184,7 +184,7 @@ class ProductItem extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: const Color(0xFFffe3c9),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
@@ -193,7 +193,7 @@ class ProductItem extends StatelessWidget {
           ClipRRect(
             borderRadius: BorderRadius.circular(8),
             child: Image.asset(
-              'assets/image1.png',
+              'assets/images/image1.png',
               width: 70,
               height: 70,
               fit: BoxFit.cover,
