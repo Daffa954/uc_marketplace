@@ -23,6 +23,13 @@ class _HomeBuyerState extends State<HomeBuyer> {
     });
   }
 
+  static const List<Widget> _widgetOptions = <Widget>[
+    HomeBodyContent(),
+    Center(child: Text('Tried Page')),
+    Center(child: Text('Chat Page')),
+    BuyerProfilePage(), // <--- Panggil halaman profile di index ke-3
+  ];
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
