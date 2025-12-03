@@ -24,7 +24,9 @@ class _RegisterPageState extends State<RegisterPage> {
               const SizedBox(height: 16),
               // Tombol Register
               ElevatedButton(
-                onPressed: () {},
+                onPressed: () {
+                  context.go('/seller/home'); 
+                },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.green,
                   foregroundColor: Colors.white,
