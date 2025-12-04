@@ -26,7 +26,7 @@ class _RegisterPageState extends State<RegisterPage> {
               ElevatedButton(
                 onPressed: () {},
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green,
+                  backgroundColor: MyApp.primaryOrange,
                   foregroundColor: Colors.white,
                   minimumSize: const Size(double.infinity, 50),
                 ),

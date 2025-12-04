@@ -8,21 +8,23 @@ class CategorySection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Column(
+      
       children: [
         const SectionHeader(title: "Category"),
         const SizedBox(height: 16),
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
-          // Clip.none agar bayangan pada kotak tidak terpotong saat di-scroll
+          
           clipBehavior: Clip.none,
           child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               _buildCategoryItem("All", null, isActive: true),
-              const SizedBox(width: 16),
+              const SizedBox(width: 50),
               _buildCategoryItem("Pick up", Icons.storefront_outlined),
-              const SizedBox(width: 16),
+              const SizedBox(width: 50),
               _buildCategoryItem("Delivery", Icons.local_shipping_outlined),
-              const SizedBox(width: 16),
+              const SizedBox(width: 50),
               _buildCategoryItem("Both", Icons.delivery_dining_outlined),
             ],
           ),
@@ -71,3 +73,4 @@ class CategorySection extends StatelessWidget {
     );
   }
 }
+
