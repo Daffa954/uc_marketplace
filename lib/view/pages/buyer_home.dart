@@ -76,41 +76,16 @@ class HomeBodyContent extends StatelessWidget {
             const SizedBox(height: 20),
             const PromoCarousel(),
             const SizedBox(height: 20),
-            SearchBar(
-              trailing: const [Icon(Icons.search)],
-              hintText: 'Search Restaurants',
-              padding: const WidgetStatePropertyAll(
-                EdgeInsets.symmetric(horizontal: 12),
-              ),
-              elevation:  const WidgetStatePropertyAll(1),
-              shape: WidgetStatePropertyAll(
-                RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(15),
-                  side:  const BorderSide(
-                    color: Color.fromARGB(
-                      255,
-                      154,
-                      154,
-                      154,
-                    ), // warna border abu-abu
-                    width: 0.7,
-                  ),
-                ),
-              ),
-              backgroundColor: const WidgetStatePropertyAll(
-                Color.fromARGB(255, 255, 255, 255),
-              ),
-              constraints: const BoxConstraints(minHeight: 42, maxHeight: 42),
-              onChanged: (value) {},
-            ),
+            const SearchBarWidget(),
             const SizedBox(height: 24),
             const CategorySection(),
             const SizedBox(height: 24),
             const RestaurantSection(title: "Open Restaurants"),
             const SizedBox(height: 24),
 
-            const PopularSection(),
+            const PopularSection(title:"Popular Foods"),
             const SizedBox(height: 20),
+             const PopularSection(title:"New Foods"),
           ],
         ),
       ),

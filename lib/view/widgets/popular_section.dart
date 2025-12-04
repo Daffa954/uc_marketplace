@@ -3,7 +3,13 @@ import 'package:uc_marketplace/view/widgets/food_cad.dart';
 import 'package:uc_marketplace/view/widgets/section_header.dart';
 
 class PopularSection extends StatelessWidget {
-  const PopularSection({super.key});
+  final String title;
+
+  const PopularSection({
+    super.key,
+    required this.title,
+  });
+ 
 
   @override
   Widget build(BuildContext context) {
@@ -38,8 +44,11 @@ class PopularSection extends StatelessWidget {
     return Column(
       children: [
         SectionHeader(
-          title: "Popular Items",
-          onSeeAllTap: () {},
+          title: title,
+          onSeeAllTap: () {
+            // Aksi ketika "See All" ditekan
+            print("See All $title tapped");
+          },
         ),
         const SizedBox(height: 8),
         SingleChildScrollView(

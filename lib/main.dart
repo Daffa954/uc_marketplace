@@ -28,6 +28,7 @@ class MyApp extends StatelessWidget {
       ),
       // 4. Home Page (Placeholder setelah login)
       GoRoute(path: '/home', builder: (context, state) => const HomeBuyer()),
+      GoRoute(path: '/search', builder: (context, state) => const SearchPage()),
     ],
   );
 
