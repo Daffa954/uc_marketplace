@@ -9,8 +9,9 @@ class HomeBuyer extends StatefulWidget {
 
 class _HomeBuyerState extends State<HomeBuyer> {
   int _selectedIndex = 0;
- final List<Widget> _pages = const [
+ final List<Widget> _pages = const [ // untuk tambah halaman, taruh sini 1
     HomeBodyContent(),
+    BuyerChatPage(), // tambah chat
     BuyerProfilePage(), // Ganti sesuai nama halaman profil kamu
   ];
 
@@ -20,11 +21,11 @@ class _HomeBuyerState extends State<HomeBuyer> {
     });
   }
 
-  static const List<Widget> _widgetOptions = <Widget>[
-    HomeBodyContent(),
-    Center(child: Text('Tried Page')),
-    Center(child: Text('Chat Page')),
-    BuyerProfilePage(), // <--- Panggil halaman profile di index ke-3
+  static const List<Widget> _widgetOptions = <Widget>[ // untuk tambah halaman, taruh sini 2
+    HomeBodyContent(),                  // Index 0: Home
+  //  Center(child: Text("Tried Page")),  // Index 1: Tried (Placeholder)
+    BuyerChatPage(),                    // Index 2: Chat (This was missing!)
+    BuyerProfilePage(),
   ];
 
   @override
@@ -52,12 +53,12 @@ class _HomeBuyerState extends State<HomeBuyer> {
             //   icon: Icon(Icons.access_time_outlined, color: Colors.white),
             //   activeIcon: Icon(Icons.access_time_filled),
             //   label: 'Tried',
-            // ),
-            // BottomNavigationBarItem(
-            //   icon: Icon(Icons.chat_bubble_outline, color: Colors.white),
-            //   activeIcon: Icon(Icons.chat_bubble),
-            //   label: 'Chat',
-            // ),
+            // ), // untuk tambah halaman, taruh sini 3
+            BottomNavigationBarItem(
+              icon: Icon(Icons.chat_bubble_outline, color: Colors.white),
+              activeIcon: Icon(Icons.chat_bubble),
+              label: 'Chat',
+            ),
             BottomNavigationBarItem(
               icon: Icon(Icons.person_outline, color: Colors.white),
               activeIcon: Icon(Icons.person),
