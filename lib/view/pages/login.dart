@@ -22,7 +22,7 @@ class _LoginPageState extends State<LoginPage> {
               key: _formKey,
               child: Column(
                 children: [
-                  const Icon(Icons.fastfood, size: 80, color: Colors.green),
+                  const Icon(Icons.fastfood, size: 80, color: MyApp.primaryOrange),
                   const SizedBox(height: 20),
                   const Text("Welcome Back!", style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 40),
@@ -43,7 +43,7 @@ class _LoginPageState extends State<LoginPage> {
                       context.go('/home'); 
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green,
+                      backgroundColor: MyApp.primaryOrange,
                       foregroundColor: Colors.white,
                       minimumSize: const Size(double.infinity, 50),
                     ),
