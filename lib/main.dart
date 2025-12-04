@@ -33,6 +33,21 @@ class MyApp extends StatelessWidget {
         path: '/buyerProfile',
         builder: (context, state) => const BuyerProfilePage(),
       ),
+
+      // SELLER
+      StatefulShellRoute.indexedStack(
+      builder: (context, state, navigationShell) {
+        return SellerMainPage(navigationShell: navigationShell);
+      },
+      branches: [
+        // Dashboard Branch
+        StatefulShellBranch(
+          routes: [
+            GoRoute(path: '/seller/home', builder: (context, state) => const SellerDashboardPage()),
+          ]
+        ),
+      ]
+      ),
     ],
   );
 

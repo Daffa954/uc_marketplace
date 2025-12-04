@@ -19,3 +19,6 @@ part 'package:uc_marketplace/view/pages/register.dart';
 part 'package:uc_marketplace/view/pages/buyer_home.dart';
 part 'package:uc_marketplace/view/pages/buyer_profile.dart';
 part 'package:uc_marketplace/view/pages/search_page.dart';
+
+part 'package:uc_marketplace/view/pages/seller_main_page.dart';
+part 'package:uc_marketplace/view/pages/seller_dashboard_page.dart';
