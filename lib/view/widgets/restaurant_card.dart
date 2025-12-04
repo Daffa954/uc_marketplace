@@ -21,7 +21,7 @@ class RestaurantCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 250, // Lebar tetap untuk kartu dalam list horizontal
+      width: 180, // Lebar tetap untuk kartu dalam list horizontal
       margin: const EdgeInsets.only(right: 16, bottom: 8, top: 8), // Margin untuk bayangan
       decoration: BoxDecoration(
         color: Colors.white,

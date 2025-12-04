@@ -1,4 +1,5 @@
 part of 'pages.dart';
+
 class HomeBuyer extends StatefulWidget {
   const HomeBuyer({super.key});
 
@@ -8,14 +9,6 @@ class HomeBuyer extends StatefulWidget {
 
 class _HomeBuyerState extends State<HomeBuyer> {
   int _selectedIndex = 0;
-
-  
-  // static const List<Widget> _widgetOptions = <Widget>[
-  //   HomeBodyContent(),
-  //   Center(child: Text('Tried Page')),
-  //   Center(child: Text('Chat Page')),
-  //   Center(child: Text('Profile Page')),
-  // ];
 
   void _onItemTapped(int index) {
     setState(() {
@@ -27,38 +20,41 @@ class _HomeBuyerState extends State<HomeBuyer> {
   Widget build(BuildContext context) {
     return Scaffold(
       // SafeArea memastikan konten tidak tertutup notch/status bar
-      body: SafeArea(
-        child: HomeBodyContent(),
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home_outlined),
-            activeIcon: Icon(Icons.home_rounded),
-            label: 'Home',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.access_time_outlined),
-             activeIcon: Icon(Icons.access_time_filled),
-            label: 'Tried',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.chat_bubble_outline),
-            activeIcon: Icon(Icons.chat_bubble),
-            label: 'Chat',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline),
-            activeIcon: Icon(Icons.person),
-            label: 'Profile',
-          ),
-        ],
-        currentIndex: _selectedIndex,
-        selectedItemColor: MyApp.primaryOrange,
-        unselectedItemColor: MyApp.textGrey,
-        showUnselectedLabels: true,
-        type: BottomNavigationBarType.fixed,
-        onTap: _onItemTapped,
+      body: SafeArea(child: HomeBodyContent()),
+      bottomNavigationBar: SizedBox(
+        height: 80,
+        child: BottomNavigationBar(
+          backgroundColor: MyApp.primaryOrange,
+          selectedItemColor: Colors.white, // warna label aktif
+          unselectedItemColor: Colors.white,
+          items: const <BottomNavigationBarItem>[
+            BottomNavigationBarItem(
+              icon: Icon(Icons.home_outlined, color: Colors.white),
+              activeIcon: Icon(Icons.home_rounded),
+              label: 'Home',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.access_time_outlined, color: Colors.white),
+              activeIcon: Icon(Icons.access_time_filled),
+              label: 'Tried',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.chat_bubble_outline, color: Colors.white),
+              activeIcon: Icon(Icons.chat_bubble),
+              label: 'Chat',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.person_outline, color: Colors.white),
+              activeIcon: Icon(Icons.person),
+              label: 'Profile',
+            ),
+          ],
+          currentIndex: _selectedIndex,
+
+          showUnselectedLabels: true,
+          type: BottomNavigationBarType.fixed,
+          onTap: _onItemTapped,
+        ),
       ),
     );
   }
@@ -70,25 +66,51 @@ class HomeBodyContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // SingleChildScrollView agar halaman bisa di-scroll
-    return const SingleChildScrollView(
+    return SingleChildScrollView(
       child: Padding(
-        padding: EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            HomeAppBar(),
-            SizedBox(height: 20),
-            PromoCarousel(),
-            SizedBox(height: 20),
-            SearchBarWidget(),
-            SizedBox(height: 24),
-            CategorySection(),
-            SizedBox(height: 24),
-            RestaurantSection(title: "Open Restaurants"),
-            SizedBox(height: 24),
-            
-            RestaurantSection(title: "Popular Items"),
-            SizedBox(height: 20),
+            const HomeAppBar(),
+            const SizedBox(height: 20),
+            const PromoCarousel(),
+            const SizedBox(height: 20),
+            SearchBar(
+              trailing: const [Icon(Icons.search)],
+              hintText: 'Search Restaurants',
+              padding: const WidgetStatePropertyAll(
+                EdgeInsets.symmetric(horizontal: 12),
+              ),
+              elevation:  const WidgetStatePropertyAll(1),
+              shape: WidgetStatePropertyAll(
+                RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(15),
+                  side:  const BorderSide(
+                    color: Color.fromARGB(
+                      255,
+                      154,
+                      154,
+                      154,
+                    ), // warna border abu-abu
+                    width: 0.7,
+                  ),
+                ),
+              ),
+              backgroundColor: const WidgetStatePropertyAll(
+                Color.fromARGB(255, 255, 255, 255),
+              ),
+              constraints: const BoxConstraints(minHeight: 42, maxHeight: 42),
+              onChanged: (value) {},
+            ),
+            const SizedBox(height: 24),
+            const CategorySection(),
+            const SizedBox(height: 24),
+            const RestaurantSection(title: "Open Restaurants"),
+            const SizedBox(height: 24),
+
+            const PopularSection(),
+            const SizedBox(height: 20),
           ],
         ),
       ),

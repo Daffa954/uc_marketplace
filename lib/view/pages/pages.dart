@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:uc_marketplace/main.dart';
 import 'package:uc_marketplace/view/widgets/category_section.dart';
 import 'package:uc_marketplace/view/widgets/home_app_bar.dart';
+import 'package:uc_marketplace/view/widgets/popular_section.dart';
 import 'package:uc_marketplace/view/widgets/promo_carousel.dart';
 import 'package:uc_marketplace/view/widgets/restaurant_section.dart';
 import 'package:uc_marketplace/view/widgets/search_bar_widget.dart';
