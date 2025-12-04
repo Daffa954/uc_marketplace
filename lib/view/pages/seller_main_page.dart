@@ -1,4 +1,4 @@
-part of 'package:uc_marketplace/view/pages/pages.dart';
+part of 'pages.dart';
 
 class SellerMainPage extends StatelessWidget {
   final StatefulNavigationShell navigationShell;

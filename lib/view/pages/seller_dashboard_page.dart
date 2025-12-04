@@ -130,7 +130,7 @@ class _SellerDashboardPageState extends State<SellerDashboardPage> {
       // Floating Action Button
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          // Add product action
+          context.go('/seller/home/menu-form', extra: null);
         },
         backgroundColor: const Color(0xFFFF8C42),
         child: const Icon(Icons.add, color: Colors.white),
