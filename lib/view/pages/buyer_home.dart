@@ -9,6 +9,10 @@ class HomeBuyer extends StatefulWidget {
 
 class _HomeBuyerState extends State<HomeBuyer> {
   int _selectedIndex = 0;
+ final List<Widget> _pages = const [
+    HomeBodyContent(),
+    BuyerProfilePage(), // Ganti sesuai nama halaman profil kamu
+  ];
 
   void _onItemTapped(int index) {
     setState(() {
@@ -20,32 +24,37 @@ class _HomeBuyerState extends State<HomeBuyer> {
   Widget build(BuildContext context) {
     return Scaffold(
       // SafeArea memastikan konten tidak tertutup notch/status bar
-      body: SafeArea(child: HomeBodyContent()),
+       body: SafeArea(
+        child: _pages[_selectedIndex], // <<< PENTING
+      ),
+
       bottomNavigationBar: SizedBox(
         height: 80,
         child: BottomNavigationBar(
           backgroundColor: MyApp.primaryOrange,
           selectedItemColor: Colors.white, // warna label aktif
           unselectedItemColor: Colors.white,
+          
           items: const <BottomNavigationBarItem>[
             BottomNavigationBarItem(
               icon: Icon(Icons.home_outlined, color: Colors.white),
               activeIcon: Icon(Icons.home_rounded),
               label: 'Home',
             ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.access_time_outlined, color: Colors.white),
-              activeIcon: Icon(Icons.access_time_filled),
-              label: 'Tried',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.chat_bubble_outline, color: Colors.white),
-              activeIcon: Icon(Icons.chat_bubble),
-              label: 'Chat',
-            ),
+            // BottomNavigationBarItem(
+            //   icon: Icon(Icons.access_time_outlined, color: Colors.white),
+            //   activeIcon: Icon(Icons.access_time_filled),
+            //   label: 'Tried',
+            // ),
+            // BottomNavigationBarItem(
+            //   icon: Icon(Icons.chat_bubble_outline, color: Colors.white),
+            //   activeIcon: Icon(Icons.chat_bubble),
+            //   label: 'Chat',
+            // ),
             BottomNavigationBarItem(
               icon: Icon(Icons.person_outline, color: Colors.white),
               activeIcon: Icon(Icons.person),
+              
               label: 'Profile',
             ),
           ],
