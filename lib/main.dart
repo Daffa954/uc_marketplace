@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:uc_marketplace/view/pages/pages.dart';
+import 'package:uc_marketplace/view/pages/seller_edit_add_menu.dart';
 
 void main() {
   runApp(MyApp());
@@ -32,6 +33,39 @@ class MyApp extends StatelessWidget {
       GoRoute(
         path: '/buyerProfile',
         builder: (context, state) => const BuyerProfilePage(),
+      ),
+
+      // SELLER
+      StatefulShellRoute.indexedStack(
+        builder: (context, state, navigationShell) {
+          return SellerMainPage(navigationShell: navigationShell);
+        },
+        branches: [
+          // Dashboard Branch
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/seller/home',
+                builder: (context, state) => const SellerDashboardPage(),
+                routes: [
+                  // --- NEW ROUTE HERE ---
+                  // This handles both "Add" (no extra) and "Edit" (passed extra)
+                  GoRoute(
+                    path: 'menu-form', // Full path: /seller/home/menu-form
+                    parentNavigatorKey:
+                        null, // Set this if you want to hide/show bottom bar specifically
+                    builder: (context, state) {
+                      // Retrieve the object passed via extra
+                      // Ensure MenuItem is imported
+                      final item = state.extra as MenuItem?;
+                      return AddEditMenuPage(item: item);
+                    },
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ],
       ),
     ],
   );

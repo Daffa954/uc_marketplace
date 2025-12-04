@@ -13,10 +13,13 @@ import 'package:uc_marketplace/view/widgets/restaurant_section.dart';
 import 'package:uc_marketplace/view/widgets/search_bar_widget.dart';
 import 'package:uc_marketplace/view/widgets/widgets.dart';
 
-part 'package:uc_marketplace/view/pages/splash.dart';
-part 'package:uc_marketplace/view/pages/login.dart';
-part 'package:uc_marketplace/view/pages/register.dart';
-part 'package:uc_marketplace/view/pages/buyer_home.dart';
-part 'package:uc_marketplace/view/pages/buyer_profile.dart';
-part 'package:uc_marketplace/view/pages/buyer_chat.dart';
-part 'package:uc_marketplace/view/pages/search_page.dart';
+part 'splash.dart';
+part 'login.dart';
+part 'register.dart';
+part 'buyer_home.dart';
+part 'buyer_profile.dart';
+part 'buyer_chat.dart';
+part 'search_page.dart';
+
+part 'seller_main_page.dart';
+part 'seller_dashboard_page.dart';
