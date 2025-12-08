@@ -14,6 +14,7 @@ import 'package:uc_marketplace/view/widgets/restaurant_section.dart';
 import 'package:uc_marketplace/view/widgets/search_bar_widget.dart';
 import 'package:uc_marketplace/view/widgets/widgets.dart';
 import 'package:uc_marketplace/viewmodel/auth_viewmodel.dart';
+import 'package:uc_marketplace/viewmodel/home_viewmodel.dart';
 
 part 'splash.dart';
 part 'login.dart';

@@ -1,52 +1,26 @@
 import 'package:flutter/material.dart';
-import 'package:uc_marketplace/view/widgets/food_cad.dart';
+import 'package:uc_marketplace/model/model.dart';
+import 'package:uc_marketplace/view/widgets/food_cad.dart'; // Pastikan nama file benar (food_card.dart atau food_cad.dart)
 import 'package:uc_marketplace/view/widgets/section_header.dart';
 
 class PopularSection extends StatelessWidget {
   final String title;
+  // 1. Terima Data List Menu dari Parent
+  final List<MenuModel> menus;
 
   const PopularSection({
     super.key,
     required this.title,
+    required this.menus, // Wajib diisi
   });
- 
 
   @override
   Widget build(BuildContext context) {
-    // Data Dummy sesuai gambar
-    final List<Map<String, dynamic>> items = [
-      {
-        'foodName': 'Choco chip cookies',
-        'restaurantName': 'Bakery Wenak',
-        'price': 'Rp. 20.000',
-        'rating': '4+',
-        'tag': 'Pick Up',
-        'image': 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?q=80&w=1398&auto=format&fit=crop'
-      },
-      {
-        'foodName': 'Beef Burger',
-        'restaurantName': 'Burger King',
-        'price': 'Rp. 45.000',
-        'rating': '4.8',
-        'tag': 'Delivery',
-        'image': 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?q=80&w=1398&auto=format&fit=crop'
-      },
-      {
-        'foodName': 'Ice Matcha Latte',
-        'restaurantName': 'Kopi Kenangan',
-        'price': 'Rp. 28.000',
-        'rating': '4.5',
-        'tag': 'Pick Up',
-        'image': 'https://images.unsplash.com/photo-1515823064-d6e0c04616a7?q=80&w=1471&auto=format&fit=crop'
-      },
-    ];
-
     return Column(
       children: [
         SectionHeader(
           title: title,
           onSeeAllTap: () {
-            // Aksi ketika "See All" ditekan
             print("See All $title tapped");
           },
         ),
@@ -55,14 +29,26 @@ class PopularSection extends StatelessWidget {
           scrollDirection: Axis.horizontal,
           clipBehavior: Clip.none,
           child: Row(
-            children: items.map((item) {
+            // 2. Mapping data MenuModel ke Widget Card
+            children: menus.map((menu) {
               return PopularItemCard(
-                foodName: item['foodName'],
-                restaurantName: item['restaurantName'],
-                price: item['price'],
-                rating: item['rating'],
-                imageUrl: item['image'],
-                tagLabel: item['tag'],
+                foodName: menu.name,
+                
+                // Karena MenuModel saat ini belum join ke tabel Restaurant,
+                // kita pakai placeholder atau teks generik dulu.
+                restaurantName: "Restaurant ID: ${menu.restaurantId}", 
+                
+                // Format Harga sederhana
+                price: "Rp ${menu.price}", 
+                
+                // Data Placeholder (Belum ada di DB)
+                rating: "4.5", 
+                
+                // Mengambil tipe menu (FOOD/DRINK) sebagai Tag
+                tagLabel: menu.type.toString().split('.').last, 
+                
+                // Ambil gambar dari DB (URL), jika null pakai placeholder
+                imageUrl: menu.image ?? "https://placehold.co/400x400/png?text=No+Image",
               );
             }).toList(),
           ),

@@ -1,77 +1,13 @@
 part of 'pages.dart';
-
-class HomeBuyer extends StatefulWidget {
+class HomeBuyer extends StatelessWidget {
   const HomeBuyer({super.key});
 
   @override
-  State<HomeBuyer> createState() => _HomeBuyerState();
-}
-
-class _HomeBuyerState extends State<HomeBuyer> {
-  int _selectedIndex = 0;
- final List<Widget> _pages = const [ 
-    HomeBodyContent(),
-    BuyerChatPage(), 
-    BuyerProfilePage(), // Ganti sesuai nama halaman profil kamu
-  ];
-
-  void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
-  }
-
-  static const List<Widget> _widgetOptions = <Widget>[
-    HomeBodyContent(),                  // Index 0: Home
-  //  Center(child: Text("Tried Page")),  // Index 1: Tried (Placeholder)
-    BuyerChatPage(),                    // Index 2: Chat (This was missing!)
-    BuyerProfilePage(),
-  ];
-
-  @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      // SafeArea memastikan konten tidak tertutup notch/status bar
-       body: SafeArea(
-        child: _pages[_selectedIndex], // <<< PENTING
-      ),
-
-      bottomNavigationBar: SizedBox(
-        height: 80,
-        child: BottomNavigationBar(
-          backgroundColor: MyApp.primaryOrange,
-          selectedItemColor: Colors.white, // warna label aktif
-          unselectedItemColor: Colors.white,
-          
-          items: const <BottomNavigationBarItem>[
-            BottomNavigationBarItem(
-              icon: Icon(Icons.home_outlined, color: Colors.white),
-              activeIcon: Icon(Icons.home_rounded),
-              label: 'Home',
-            ),
-            // BottomNavigationBarItem(
-            //   icon: Icon(Icons.access_time_outlined, color: Colors.white),
-            //   activeIcon: Icon(Icons.access_time_filled),
-            //   label: 'Tried',
-            // ), // untuk tambah halaman, taruh sini 3
-            BottomNavigationBarItem(
-              icon: Icon(Icons.chat_bubble_outline, color: Colors.white),
-              activeIcon: Icon(Icons.chat_bubble),
-              label: 'Chat',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.person_outline, color: Colors.white),
-              activeIcon: Icon(Icons.person),
-              
-              label: 'Profile',
-            ),
-          ],
-          currentIndex: _selectedIndex,
-
-          showUnselectedLabels: true,
-          type: BottomNavigationBarType.fixed,
-          onTap: _onItemTapped,
-        ),
+    // Kita hapus BottomNavigationBar dari sini karena sudah ditangani oleh BuyerMainWrapper
+    return const Scaffold(
+      body: SafeArea(
+        child: HomeBodyContent(),
       ),
     );
   }
@@ -82,27 +18,76 @@ class HomeBodyContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // SingleChildScrollView agar halaman bisa di-scroll
-    return SingleChildScrollView(
-      child: Padding(
+    // 1. Panggil HomeViewModel
+    final homeVM = Provider.of<HomeViewModel>(context);
+
+    // 2. Tambahkan RefreshIndicator agar bisa ditarik untuk refresh
+    return RefreshIndicator(
+      onRefresh: () => homeVM.fetchHomeData(),
+      color: const Color(0xFFFF7F27), // Warna Orange
+      child: SingleChildScrollView(
+        // Physics agar scroll tetap bisa ditarik meskipun konten sedikit
+        physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // --- Header (User Info) ---
             const HomeAppBar(),
+            
             const SizedBox(height: 20),
+            
+            // --- Promo & Search ---
             const PromoCarousel(),
             const SizedBox(height: 20),
             const SearchBarWidget(),
+            
             const SizedBox(height: 24),
+            
+            // --- Kategori ---
             const CategorySection(),
-            const SizedBox(height: 24),
-            const RestaurantSection(title: "Open Restaurants"),
+            
             const SizedBox(height: 24),
 
-            const PopularSection(title:"Popular Foods"),
+            // --- SECTION 1: RESTORAN ---
+            if (homeVM.isLoading)
+              const Center(child: Padding(
+                padding: EdgeInsets.all(20),
+                child: CircularProgressIndicator(),
+              ))
+            else if (homeVM.restaurants.isEmpty)
+              const Center(child: Text("Belum ada restoran buka."))
+            else
+              RestaurantSection(
+                title: "Open Restaurants",
+                restaurants: homeVM.restaurants, // Kirim data dari ViewModel
+              ),
+
+            const SizedBox(height: 24),
+
+            // --- SECTION 2: POPULAR FOODS ---
+            if (homeVM.isLoading)
+              const SizedBox.shrink() // Loading sudah dicover di atas
+            else if (homeVM.menus.isEmpty)
+              const Center(child: Text("Belum ada menu populer."))
+            else
+              PopularSection(
+                title: "Popular Foods",
+                menus: homeVM.menus, // Kirim data dari ViewModel
+              ),
+
             const SizedBox(height: 20),
-             const PopularSection(title:"New Foods"),
+            
+            // --- SECTION 3: NEW FOODS (Bisa pakai list menu yang sama atau beda) ---
+            // Disini saya pakai list yang sama untuk contoh
+            if (!homeVM.isLoading && homeVM.menus.isNotEmpty)
+               PopularSection(
+                title: "New Foods",
+                menus: homeVM.menus.reversed.toList(), // Contoh: dibalik urutannya
+              ),
+              
+             // Tambahan space bawah agar tidak tertutup bottom bar wrapper
+             const SizedBox(height: 80), 
           ],
         ),
       ),

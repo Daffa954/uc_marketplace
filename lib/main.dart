@@ -94,6 +94,7 @@ import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uc_marketplace/router/router.dart';
 import 'package:uc_marketplace/viewmodel/auth_viewmodel.dart';
+import 'package:uc_marketplace/viewmodel/home_viewmodel.dart';
 
 import 'shared/shared.dart'; // Import Router Anda
 
@@ -126,7 +127,10 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     // Bungkus dengan MultiProvider agar AuthViewModel bisa diakses di seluruh aplikasi
     return MultiProvider(
-      providers: [ChangeNotifierProvider(create: (_) => AuthViewModel())],
+      providers: [
+        ChangeNotifierProvider(create: (_) => AuthViewModel()),
+        ChangeNotifierProvider(create: (_) => HomeViewModel()),
+      ],
       child: MaterialApp.router(
         routerConfig: AppRouter.router, // Menggunakan Router yang sudah dipisah
         debugShowCheckedModeBanner: false,
