@@ -9,9 +9,9 @@ class HomeBuyer extends StatefulWidget {
 
 class _HomeBuyerState extends State<HomeBuyer> {
   int _selectedIndex = 0;
- final List<Widget> _pages = const [ // untuk tambah halaman, taruh sini 1
+ final List<Widget> _pages = const [ 
     HomeBodyContent(),
-    BuyerChatPage(), // tambah chat
+    BuyerChatPage(), 
     BuyerProfilePage(), // Ganti sesuai nama halaman profil kamu
   ];
 
@@ -21,7 +21,7 @@ class _HomeBuyerState extends State<HomeBuyer> {
     });
   }
 
-  static const List<Widget> _widgetOptions = <Widget>[ // untuk tambah halaman, taruh sini 2
+  static const List<Widget> _widgetOptions = <Widget>[
     HomeBodyContent(),                  // Index 0: Home
   //  Center(child: Text("Tried Page")),  // Index 1: Tried (Placeholder)
     BuyerChatPage(),                    // Index 2: Chat (This was missing!)

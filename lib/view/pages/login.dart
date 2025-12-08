@@ -1,5 +1,5 @@
-part of 'pages.dart';
 
+part of 'pages.dart';
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 
@@ -8,64 +8,102 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
-  // Controller... (bisa ditambahkan kembali)
 
   @override
   Widget build(BuildContext context) {
+    // Panggil Provider
+    final authVM = Provider.of<AuthViewModel>(context);
+
     return Scaffold(
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24.0),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                children: [
-                  const Icon(Icons.fastfood, size: 80, color: MyApp.primaryOrange),
-                  const SizedBox(height: 20),
-                  const Text("Welcome Back!", style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 40),
-                  
-                  TextFormField(
-                    decoration: const InputDecoration(labelText: "Email", prefixIcon: Icon(Icons.email_outlined)),
+      body: Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const Text(
+                  "UC Marketplace",
+                  style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.green),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  "Silakan masuk akun Anda",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: Colors.grey),
+                ),
+                const SizedBox(height: 30),
+                
+                // Email
+                TextFormField(
+                  controller: _emailController,
+                  decoration: const InputDecoration(
+                    labelText: "Email",
+                    prefixIcon: Icon(Icons.email),
                   ),
-                  const SizedBox(height: 20),
-                  TextFormField(
-                    obscureText: true,
-                    decoration: const InputDecoration(labelText: "Password", prefixIcon: Icon(Icons.lock_outline)),
+                  validator: (v) => v!.isEmpty ? "Email wajib diisi" : null,
+                ),
+                const SizedBox(height: 16),
+                
+                // Password
+                TextFormField(
+                  controller: _passwordController,
+                  obscureText: true,
+                  decoration: const InputDecoration(
+                    labelText: "Password",
+                    prefixIcon: Icon(Icons.lock),
                   ),
-                  const SizedBox(height: 20),
-
-                  ElevatedButton(
-                    onPressed: () {
-                      // PERUBAHAN 2: Login Berhasil -> Pindah ke Home
-                      context.go('/home'); 
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: MyApp.primaryOrange,
-                      foregroundColor: Colors.white,
-                      minimumSize: const Size(double.infinity, 50),
-                    ),
-                    child: const Text("LOGIN"),
-                  ),
-                  const SizedBox(height: 20),
-
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Text("Don't have an account?"),
-                      TextButton(
-                        onPressed: () {
-                          // PERUBAHAN 3: Pindah ke Register (push agar bisa back)
-                          context.push('/register');
+                  validator: (v) => v!.isEmpty ? "Password wajib diisi" : null,
+                ),
+                const SizedBox(height: 24),
+                
+                // Button Login
+                ElevatedButton(
+                  onPressed: authVM.isLoading
+                      ? null
+                      : () {
+                          if (_formKey.currentState!.validate()) {
+                            // Panggil ViewModel
+                            authVM.login(
+                              _emailController.text,
+                              _passwordController.text,
+                              context,
+                            );
+                          }
                         },
-                        child: const Text("Register"),
-                      ),
-                    ],
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
                   ),
-                ],
-              ),
+                  child: authVM.isLoading
+                      ? const SizedBox(
+                          height: 20, width: 20, 
+                          child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)
+                        )
+                      : const Text("MASUK", style: TextStyle(color: Colors.white, fontSize: 16)),
+                ),
+                
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Text("Belum punya akun? "),
+                    GestureDetector(
+                      onTap: () => context.push('/register'), // Pindah ke Register
+                      child: const Text(
+                        "Daftar",
+                        style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ],
+                )
+              ],
             ),
           ),
         ),
