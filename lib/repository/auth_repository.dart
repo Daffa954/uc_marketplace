@@ -83,7 +83,36 @@ class AuthRepository {
       throw Exception("Gagal mendaftar: $e");
     }
   }
+Future<UserModel?> getCurrentSession() async {
+    // 1. Cek apakah ada user yang sedang login di Auth Supabase (Local Storage)
+    final session = _supabase.auth.currentSession;
+    final user = _supabase.auth.currentUser;
 
+    if (session == null || user == null) {
+      return null; // Tidak ada sesi aktif
+    }
+
+    // 2. Jika ada, token mungkin expired, cek validitasnya (Opsional tapi bagus)
+    if (session.isExpired) {
+      return null;
+    }
+
+    try {
+      // 3. Ambil data detail (Role, Nama) dari tabel 'users' berdasarkan email/id
+      final userData = await _supabase
+          .from('users')
+          .select()
+          .eq('email', user.email!) 
+          .single();
+
+      return UserModel.fromJson(userData);
+    } catch (e) {
+      // Jika terjadi error (misal user dihapus dari DB tapi token masih ada di HP)
+      // Kita anggap logout
+      await logout(); 
+      return null;
+    }
+  }
   // --- LOGOUT ---
   Future<void> logout() async {
     await _supabase.auth.signOut();

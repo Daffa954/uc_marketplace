@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:uc_marketplace/main_wrapper.dart';
+import 'package:uc_marketplace/model/model.dart';
 import 'package:uc_marketplace/view/pages/pages.dart';
 import 'package:uc_marketplace/view/pages/seller_edit_add_menu.dart';
 
@@ -16,8 +17,19 @@ class AppRouter {
       // --- PUBLIC ROUTES ---
       GoRoute(path: '/', builder: (context, state) => const SplashScreen()),
       GoRoute(path: '/login', builder: (context, state) => const LoginPage()),
-      GoRoute(path: '/register', builder: (context, state) => const RegisterPage()),
-
+      GoRoute(
+        path: '/register',
+        builder: (context, state) => const RegisterPage(),
+      ),
+      GoRoute(
+        path: '/buyer/po-detail',
+        // parentNavigatorKey: rootNavigatorKey, // Menutupi Bottom Nav
+        builder: (context, state) {
+          // Ambil object yang dikirim
+          final po = state.extra as PreOrderModel;
+          return PreOrderDetailPage(preOrder: po);
+        },
+      ),
       // =======================================================================
       // 1. BUYER SHELL
       // =======================================================================
@@ -28,17 +40,26 @@ class AppRouter {
         branches: [
           StatefulShellBranch(
             routes: [
-              GoRoute(path: '/buyer/home', builder: (context, state) => const HomeBuyer()),
+              GoRoute(
+                path: '/buyer/home',
+                builder: (context, state) => const HomeBuyer(),
+              ),
             ],
           ),
           StatefulShellBranch(
             routes: [
-              GoRoute(path: '/buyer/search', builder: (context, state) => const SearchPage()),
+              GoRoute(
+                path: '/buyer/search',
+                builder: (context, state) => const SearchPage(),
+              ),
             ],
           ),
           StatefulShellBranch(
             routes: [
-              GoRoute(path: '/buyer/profile', builder: (context, state) => const BuyerProfilePage()),
+              GoRoute(
+                path: '/buyer/profile',
+                builder: (context, state) => const BuyerProfilePage(),
+              ),
             ],
           ),
         ],
@@ -77,7 +98,8 @@ class AppRouter {
             routes: [
               GoRoute(
                 path: '/seller/products',
-                builder: (context, state) => const Center(child: Text("Halaman Produk")),
+                builder: (context, state) =>
+                    const Center(child: Text("Halaman Produk")),
               ),
             ],
           ),
@@ -86,7 +108,8 @@ class AppRouter {
             routes: [
               GoRoute(
                 path: '/seller/settings',
-                builder: (context, state) => const Center(child: Text("Halaman Setting")),
+                builder: (context, state) =>
+                    const Center(child: Text("Halaman Setting")),
               ),
             ],
           ),
