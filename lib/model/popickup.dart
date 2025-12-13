@@ -7,8 +7,8 @@ class PoPickupModel {
   final String? endTime;
   final String? address;
   final double? longitude;
-  final double? altitude;
-  final Map<String, dynamic>? photoLocation; // JSONB di Postgres
+  final double? latitude;
+  final List<String>? photoLocation;
 
   PoPickupModel({
     required this.preOrderId,
@@ -17,7 +17,7 @@ class PoPickupModel {
     this.endTime,
     this.address,
     this.longitude,
-    this.altitude,
+    this.latitude,
     this.photoLocation,
   });
 
@@ -30,8 +30,10 @@ class PoPickupModel {
       address: json['address'],
       // Konversi aman ke double
       longitude: (json['longitude'] as num?)?.toDouble(),
-      altitude: (json['altitude'] as num?)?.toDouble(),
-      photoLocation: json['photo_location'],
+      latitude: (json['altitude'] as num?)?.toDouble(),
+      photoLocation: json['photo_location'] != null
+          ? List<String>.from(json['photo_location'])
+          : [],
     );
   }
 
@@ -42,7 +44,7 @@ class PoPickupModel {
     'end_time': endTime,
     'address': address,
     'longitude': longitude,
-    'altitude': altitude,
+    'latitude': latitude,
     'photo_location': photoLocation,
   };
 }

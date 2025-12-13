@@ -1,6 +1,9 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:uc_marketplace/main.dart';
@@ -19,6 +22,7 @@ import 'package:uc_marketplace/view/widgets/search_bar_widget.dart';
 import 'package:uc_marketplace/view/widgets/widgets.dart';
 import 'package:uc_marketplace/viewmodel/auth_viewmodel.dart';
 import 'package:uc_marketplace/viewmodel/home_viewmodel.dart';
+import 'package:uc_marketplace/viewmodel/order_viewmodel.dart';
 import 'package:uc_marketplace/viewmodel/pre_order_viewmodel.dart';
 import 'package:uc_marketplace/viewmodel/search_viewmodel.dart';
 
@@ -32,4 +36,5 @@ part 'search_page.dart';
 part 'buyer_podetail.dart';
 part 'seller_main_page.dart';
 part 'seller_dashboard_page.dart';
-
+part 'checkout_page.dart';
+part 'map_picker.dart';

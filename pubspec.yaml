@@ -37,8 +37,14 @@ dependencies:
   flutter_dotenv: ^6.0.0
   go_router: ^17.0.0
   http: ^1.6.0
+  midtrans: ^0.1.0
+  midtrans_snap: ^1.0.1
   provider: ^6.1.5+1
   supabase_flutter: ^2.10.3
+  flutter_map: ^6.1.0       # Untuk menampilkan Peta
+  latlong2: ^0.9.0          # Untuk menghitung koordinat
+  geocoding: ^3.0.0         # (Opsional) Untuk ubah koordinat jadi Alamat
+  geolocator: ^14.0.2
 
 dev_dependencies:
   flutter_lints: ^5.0.0

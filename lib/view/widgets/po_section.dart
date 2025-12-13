@@ -33,7 +33,7 @@ class PoSection extends StatelessWidget {
               return PreOrderCard(
                 preOrder: preOrder,
                 onTap: () {
-                  context.push('/buyer/po-detail', extra: preOrder);
+                  context.push('/buyer/home/po-detail', extra: preOrder);
                 },
               );
             }).toList(),

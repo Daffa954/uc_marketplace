@@ -95,6 +95,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uc_marketplace/router/router.dart';
 import 'package:uc_marketplace/viewmodel/auth_viewmodel.dart';
 import 'package:uc_marketplace/viewmodel/home_viewmodel.dart';
+import 'package:uc_marketplace/viewmodel/order_viewmodel.dart';
 import 'package:uc_marketplace/viewmodel/pre_order_viewmodel.dart';
 import 'package:uc_marketplace/viewmodel/search_viewmodel.dart';
 
@@ -134,6 +135,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => HomeViewModel()),
         ChangeNotifierProvider(create: (_) => SearchViewModel()),
         ChangeNotifierProvider(create: (_) => PreOrderViewModel()),
+        ChangeNotifierProvider(create: (_) => OrderViewModel()),
       ],
       child: MaterialApp.router(
         routerConfig: AppRouter.router, // Menggunakan Router yang sudah dipisah

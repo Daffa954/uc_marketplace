@@ -12,3 +12,4 @@ part 'message.dart';
 part 'payment.dart';
 part 'preordermenu.dart';
 part 'broadcast.dart';
+part 'cartitem.dart';

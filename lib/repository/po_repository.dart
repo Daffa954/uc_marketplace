@@ -69,4 +69,19 @@ class PreOrderRepository {
       throw Exception('Gagal mengambil semua menu PO: $e');
     }
   }
+
+  // --- AMBIL LIST PICKUP (1 PO BISA BANYAK LOKASI) ---
+  Future<List<PoPickupModel>> getPickupList(int preOrderId) async {
+    try {
+      final data = await _supabase
+          .from('po_pickup')
+          .select()
+          .eq('pre_order_id', preOrderId); // Ambil semua yang cocok
+
+      // Mapping ke List Model
+      return (data as List).map((e) => PoPickupModel.fromJson(e)).toList();
+    } catch (e) {
+      return []; // Return list kosong jika error/tidak ada
+    }
+  }
 }

@@ -16,6 +16,9 @@ class PreOrderViewModel with ChangeNotifier {
   bool _isLoading = false;
   bool get isLoading => _isLoading;
 
+List<PoPickupModel> _pickupList = [];
+  List<PoPickupModel> get pickupList => _pickupList;
+
   // Constructor: Langsung ambil data PO saat ViewModel dibuat
   PreOrderViewModel() {
     fetchPreOrders();
@@ -39,14 +42,21 @@ class PreOrderViewModel with ChangeNotifier {
   // 2. Fetch Menu berdasarkan ID PO (Dipanggil saat kartu PO diklik)
   Future<void> fetchMenusForPO(int preOrderId) async {
     _isLoading = true;
-    // Kosongkan list menu lama agar tidak flicker
-    _selectedPOMenus = []; 
+    _selectedPOMenus = [];
+    _pickupList = []; // Reset
     notifyListeners();
 
     try {
-      _selectedPOMenus = await _repo.getMenusByPreOrder(preOrderId);
+      final results = await Future.wait([
+        _repo.getMenusByPreOrder(preOrderId),
+        _repo.getPickupList(preOrderId), // Panggil fungsi baru
+      ]);
+
+      _selectedPOMenus = results[0] as List<MenuModel>;
+      _pickupList = results[1] as List<PoPickupModel>; // Cast ke List
+      
     } catch (e) {
-      debugPrint("Error fetching PO Menus: $e");
+      debugPrint("Error: $e");
     } finally {
       _isLoading = false;
       notifyListeners();
