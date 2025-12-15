@@ -135,7 +135,15 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => HomeViewModel()),
         ChangeNotifierProvider(create: (_) => SearchViewModel()),
         ChangeNotifierProvider(create: (_) => PreOrderViewModel()),
-        ChangeNotifierProvider(create: (_) => OrderViewModel()),
+       ChangeNotifierProxyProvider<AuthViewModel, OrderViewModel>(
+          create: (context) => OrderViewModel(
+            authVM: Provider.of<AuthViewModel>(context, listen: false)
+          ),
+          update: (context, authVM, previousOrderVM) => 
+            // Setiap kali AuthVM berubah (misal login/logout), 
+            // OrderVM mendapat instance AuthVM terbaru
+            OrderViewModel(authVM: authVM),
+        ),
       ],
       child: MaterialApp.router(
         routerConfig: AppRouter.router, // Menggunakan Router yang sudah dipisah

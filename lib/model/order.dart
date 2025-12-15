@@ -9,7 +9,9 @@ class OrderModel {
   final int total;
   final String? note;
   final List<OrderItemModel>? items;
-
+// [TAMBAHAN PENTING]
+  final String status; // 'PENDING', 'PAID', 'COMPLETED', 'CANCELLED'
+  final String? createdAt; // Untuk history
 
   OrderModel({
     this.orderId,
@@ -19,6 +21,8 @@ class OrderModel {
     required this.total,
     this.note,
     this.items,
+    this.status = 'PENDING',
+    this.createdAt,
   });
 
   factory OrderModel.fromJson(Map<String, dynamic> json) {
@@ -29,6 +33,8 @@ class OrderModel {
       poPickupId: json['po_pickup_id'], // Parse dari JSON
       total: json['total'] ?? 0,
       note: json['note'],
+      status: json['status'] ?? 'PENDING',
+      createdAt: json['created_at'],
       // Logic untuk parsing items jika di-include dalam query supabase
       items: json['order_items'] != null 
           ? (json['order_items'] as List).map((i) => OrderItemModel.fromJson(i)).toList()
@@ -37,11 +43,12 @@ class OrderModel {
   }
 
   Map<String, dynamic> toJson() => {
-    'order_id': orderId,
     'user_id': userId,
     'pre_order_id': preOrderId,
     'po_pickup_id': poPickupId,
     'total': total,
     'note': note,
+    'status': status,
+    'created_at': createdAt,
   };
 }

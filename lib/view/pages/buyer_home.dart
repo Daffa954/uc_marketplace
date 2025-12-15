@@ -5,7 +5,6 @@ class HomeBuyer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Kita hapus BottomNavigationBar dari sini karena sudah ditangani oleh BuyerMainWrapper
     return const Scaffold(body: SafeArea(child: HomeBodyContent()));
   }
 }
@@ -15,15 +14,12 @@ class HomeBodyContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // 1. Panggil HomeViewModel
     final homeVM = Provider.of<HomeViewModel>(context);
 
-    // 2. Tambahkan RefreshIndicator agar bisa ditarik untuk refresh
     return RefreshIndicator(
       onRefresh: () => homeVM.fetchHomeData(),
-      color: const Color(0xFFFF7F27), // Warna Orange
+      color: const Color(0xFFFF7F27), 
       child: SingleChildScrollView(
-        // Physics agar scroll tetap bisa ditarik meskipun konten sedikit
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -66,7 +62,7 @@ class HomeBodyContent extends StatelessWidget {
 
             // --- SECTION 2: POPULAR FOODS ---
             if (homeVM.isLoading)
-              const SizedBox.shrink() // Loading sudah dicover di atas
+              const SizedBox.shrink() 
             else if (homeVM.menus.isEmpty)
               const Center(child: Text("Belum ada menu populer."))
             else
@@ -77,8 +73,7 @@ class HomeBodyContent extends StatelessWidget {
 
             const SizedBox(height: 20),
 
-            // --- SECTION 3: NEW FOODS (Bisa pakai list menu yang sama atau beda) ---
-            // Disini saya pakai list yang sama untuk contoh
+            // --- SECTION 3: NEW FOODS  ---
             if (!homeVM.isLoading && homeVM.menus.isNotEmpty)
               PopularSection(
                 title: "New Foods",

@@ -17,17 +17,16 @@ class CheckoutPage extends StatefulWidget {
 }
 
 class _CheckoutPageState extends State<CheckoutPage> {
-  // State Data
+  // State UI
   List<CartItem> _cartItems = [];
   String _selectedDelivery = "Pick up"; 
   PoPickupModel? _selectedPickup;
-  
-  // Controller untuk Catatan
   final TextEditingController _noteController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
+    // Default pilih lokasi pertama jika ada
     if (widget.pickupList.isNotEmpty) {
       _selectedPickup = widget.pickupList.first;
     }
@@ -40,7 +39,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
     super.dispose();
   }
 
-  // --- LOGIC GROUPING & QUANTITY ---
+  // --- LOGIC UI: GROUPING ITEM ---
   void _groupItems() {
     final Map<int, CartItem> grouped = {};
     for (var menu in widget.rawItems) {
@@ -54,6 +53,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
     setState(() => _cartItems = grouped.values.toList());
   }
 
+  // --- LOGIC UI: UPDATE QTY ---
   void _increment(int index) => setState(() => _cartItems[index].quantity++);
 
   void _decrement(int index) {
@@ -62,18 +62,72 @@ class _CheckoutPageState extends State<CheckoutPage> {
         _cartItems[index].quantity--;
       } else {
         _cartItems.removeAt(index);
+        // Jika keranjang kosong, kembali ke halaman sebelumnya
         if (_cartItems.isEmpty) context.pop();
       }
     });
   }
 
-  double get _totalPrice {
+  // --- LOGIC UI: TOTAL HARGA (Hanya untuk Display) ---
+  double get _uiTotalPrice {
     double total = 0;
     for (var item in _cartItems) {
       double price = double.tryParse(item.menu.price.toString()) ?? 0;
       total += price * item.quantity;
     }
     return total;
+  }
+
+  // --- LOGIC UTAMA: PROCESS PAYMENT (SANGAT BERSIH) ---
+  void _processPayment() async {
+    // 1. Panggil ViewModel
+    final orderVM = Provider.of<OrderViewModel>(context, listen: false);
+
+    // 2. Kirim Data Mentah ke VM
+    // VM yang akan validasi User, Lokasi, dan hitung Total Final ke DB.
+    final String? errorMessage = await orderVM.submitOrder(
+      preOrderId: widget.preOrder.preOrderId!,
+      cartItems: _cartItems,
+      deliveryMode: _selectedDelivery,
+      pickupLocation: _selectedPickup,
+      userNote: _noteController.text,
+    );
+
+    // 3. Handle Respon UI
+    if (!mounted) return;
+
+    if (errorMessage == null) {
+      // SUKSES
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (ctx) => AlertDialog(
+          content: const Column(
+            mainAxisSize: MainAxisSize.min, 
+            children: [
+              Icon(Icons.check_circle, color: Colors.green, size: 60), 
+              SizedBox(height: 10), 
+              Text("Order Berhasil Dibuat!")
+            ]
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => context.go('/buyer/home'), 
+              child: const Text("OK")
+            )
+          ],
+        ),
+      );
+    } else {
+      // GAGAL (Tampilkan pesan error dari VM)
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(errorMessage), 
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+        )
+      );
+    }
   }
 
   // --- MODAL SELECTOR LOKASI ---
@@ -96,6 +150,12 @@ class _CheckoutPageState extends State<CheckoutPage> {
                 itemBuilder: (ctx, index) {
                   final item = widget.pickupList[index];
                   bool isSelected = item == _selectedPickup;
+                  
+                  // Ambil gambar pertama atau placeholder
+                  String imgUrl = (item.photoLocation != null && item.photoLocation!.isNotEmpty)
+                      ? item.photoLocation!.first
+                      : "https://placehold.co/100x100?text=No+Img";
+
                   return ListTile(
                     contentPadding: EdgeInsets.zero,
                     onTap: () {
@@ -104,11 +164,13 @@ class _CheckoutPageState extends State<CheckoutPage> {
                     },
                     leading: ClipRRect(
                       borderRadius: BorderRadius.circular(8),
+                      // [PERBAIKAN] Tambahkan errorBuilder
                       child: Image.network(
-                        (item.photoLocation != null && item.photoLocation!.isNotEmpty)
-                            ? item.photoLocation![0]
-                            : "https://placehold.co/100x100?text=No+Img",
+                        imgUrl,
                         width: 50, height: 50, fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Container(width: 50, height: 50, color: Colors.grey[300], child: const Icon(Icons.broken_image, size: 20));
+                        },
                       ),
                     ),
                     title: Text(item.address ?? "Lokasi ${index + 1}", style: const TextStyle(fontWeight: FontWeight.bold)),
@@ -128,10 +190,12 @@ class _CheckoutPageState extends State<CheckoutPage> {
   Widget build(BuildContext context) {
     // Helper Image URL
     String locationImage = "https://placehold.co/150x150?text=Location";
+    
+    // Cek apakah ada foto di array
     if (_selectedPickup != null && 
         _selectedPickup!.photoLocation != null && 
         _selectedPickup!.photoLocation!.isNotEmpty) {
-      locationImage = _selectedPickup!.photoLocation![0];
+      locationImage = _selectedPickup!.photoLocation!.first;
     }
 
     return Scaffold(
@@ -160,8 +224,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                   ),
                   const SizedBox(height: 20),
 
-                  // 2. PICKUP LOCATION CARD
-                  GestureDetector(
+GestureDetector(
                     onTap: () { if (widget.pickupList.length > 1) _showPickupSelector(); },
                     child: Container(
                       padding: const EdgeInsets.all(12),
@@ -175,7 +238,14 @@ class _CheckoutPageState extends State<CheckoutPage> {
                         children: [
                           ClipRRect(
                             borderRadius: BorderRadius.circular(12),
-                            child: Image.network(locationImage, width: 70, height: 70, fit: BoxFit.cover),
+                            // [PERBAIKAN] Tambahkan errorBuilder
+                            child: Image.network(
+                              locationImage, 
+                              width: 70, height: 70, fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) {
+                                return Container(width: 70, height: 70, color: Colors.grey[300], child: const Icon(Icons.map, color: Colors.grey));
+                              },
+                            ),
                           ),
                           const SizedBox(width: 12),
                           Expanded(
@@ -221,7 +291,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
 
                   const SizedBox(height: 24),
 
-                  // 4. CATATAN PESANAN (BARU)
+                  // 4. CATATAN PESANAN
                   const Text("Catatan Pesanan", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 8),
                   TextField(
@@ -236,9 +306,6 @@ class _CheckoutPageState extends State<CheckoutPage> {
                   ),
                   
                   const SizedBox(height: 24),
-
-                  // 5. VOUCHER (OPTIONAL)
-                  // ... (Kode Voucher sama seperti sebelumnya) ...
                 ],
               ),
             ),
@@ -259,12 +326,14 @@ class _CheckoutPageState extends State<CheckoutPage> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     const Text("Total", style: TextStyle(fontWeight: FontWeight.bold)),
-                    Text("Rp ${_totalPrice.toStringAsFixed(0)}", style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                    // Gunakan _uiTotalPrice untuk tampilan
+                    Text("Rp ${_uiTotalPrice.toStringAsFixed(0)}", style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
                   ],
                 ),
                 Consumer<OrderViewModel>(
                   builder: (context, orderVM, child) {
                     return ElevatedButton(
+                      // Matikan tombol jika VM sedang loading
                       onPressed: orderVM.isLoading ? null : () => _processPayment(),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFFFF7F27),
@@ -330,53 +399,5 @@ class _CheckoutPageState extends State<CheckoutPage> {
         )
       ],
     );
-  }
-
-  // --- LOGIC PAYMENT & SAVE TO DB ---
-  void _processPayment() async {
-    final authVM = Provider.of<AuthViewModel>(context, listen: false);
-    final user = authVM.currentUser;
-
-    if (user == null || user.userId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("User belum login")));
-      return;
-    }
-    
-    if (_selectedDelivery == "Pick up" && _selectedPickup == null) {
-       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Pilih lokasi pengambilan dulu")));
-       return;
-    }
-
-    // Gabungkan Note User + Info Pickup
-    String finalNote = "";
-    if (_noteController.text.isNotEmpty) {
-      finalNote += "Note: ${_noteController.text} | ";
-    }
-    finalNote += "Mode: $_selectedDelivery";
-    if (_selectedDelivery == "Pick up") {
-      finalNote += " @ ${_selectedPickup?.address} (${_selectedPickup?.startTime})";
-    }
-
-    // PANGGIL VIEWMODEL UNTUK SAVE KE DB
-    final success = await Provider.of<OrderViewModel>(context, listen: false).placeOrder(
-      userId: int.tryParse(user.userId.toString()) ?? 0,
-      preOrderId: widget.preOrder.preOrderId!,
-      cartItems: _cartItems,
-      totalPrice: _totalPrice,
-      note: finalNote, // Catatan lengkap dikirim ke sini
-    );
-
-    if (success && mounted) {
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (ctx) => AlertDialog(
-          content: const Column(mainAxisSize: MainAxisSize.min, children: [Icon(Icons.check_circle, color: Colors.green, size: 60), SizedBox(height: 10), Text("Order Berhasil Dibuat!")]),
-          actions: [TextButton(onPressed: () => context.go('/buyer/home'), child: const Text("OK"))],
-        ),
-      );
-    } else if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Gagal membuat pesanan"), backgroundColor: Colors.red));
-    }
   }
 }

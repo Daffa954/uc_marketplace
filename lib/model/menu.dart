@@ -2,6 +2,8 @@ part of 'model.dart';
 
 class MenuModel {
   final int? menuId;
+  // Agar saat query join (PreOrder -> Menu), kita bisa simpan ID relasinya.
+  final int? preOrderMenuId;
   final int? restaurantId;
   final String name;
   final String? description;
@@ -11,6 +13,7 @@ class MenuModel {
 
   MenuModel({
     this.menuId,
+    this.preOrderMenuId,
     this.restaurantId,
     required this.name,
     this.description,
@@ -23,6 +26,7 @@ class MenuModel {
     return MenuModel(
       menuId: json['menu_id'],
       restaurantId: json['restaurant_id'],
+      preOrderMenuId: json['pre_order_menu_id'],
       name: json['name'] ?? '',
       description: json['description'],
       image: json['image'],

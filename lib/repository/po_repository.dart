@@ -21,23 +21,30 @@ class PreOrderRepository {
     }
   }
 
-  // --- 2. AMBIL MENU SPESIFIK UNTUK PO TERTENTU (JOIN QUERY) ---
-  // Kita perlu join tabel 'pre_order_menu' dengan tabel 'menus'
+ // --- 2. AMBIL MENU SPESIFIK UNTUK PO TERTENTU (CRITICAL FIX) ---
   Future<List<MenuModel>> getMenusByPreOrder(int preOrderId) async {
     try {
+     
       final data = await _supabase
           .from('pre_order_menu')
-          // Syntax Join Supabase: ambil kolom menu, lalu expand detail menu-nya
-          .select('menus(*)')
+          .select('pre_order_menu_id, menus(*)') 
           .eq('pre_order_id', preOrderId);
 
-      // Data yang kembali bentuknya List of Map:
-      // [ { "menus": { "name": "Nasi", ... } }, { "menus": { ... } } ]
+      
 
       return (data as List).map((e) {
-        // Kita ambil object 'menus' di dalamnya
-        return MenuModel.fromJson(e['menus']);
-      }).toList();
+        if (e['menus'] == null) return null;
+
+      
+        final Map<String, dynamic> menuData = Map<String, dynamic>.from(e['menus']);
+        
+        // Inject ID Relasi agar tidak NULL
+        menuData['pre_order_menu_id'] = e['pre_order_menu_id']; 
+        
+      
+        return MenuModel.fromJson(menuData);
+      }).whereType<MenuModel>().toList(); // Filter null jika ada data kotor
+
     } catch (e) {
       throw Exception('Gagal mengambil menu PO: $e');
     }
@@ -47,10 +54,7 @@ class PreOrderRepository {
     try {
       final data = await _supabase
           .from('pre_order_menu')
-          .select('menus(*)'); // Ambil detail menu
-      // .limit(20); // Opsional: Batasi jika datanya ribuan
-
-      // Hasil data mentah: [{menus: {id: 1, name: A}}, {menus: {id: 1, name: A}}, {menus: {id: 2, name: B}}]
+          .select('menus(*)'); 
 
       final List<MenuModel> allMenus = (data as List).map((e) {
         return MenuModel.fromJson(e['menus']);
