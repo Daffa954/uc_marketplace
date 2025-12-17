@@ -35,6 +35,8 @@ import 'package:uc_marketplace/viewmodel/order_viewmodel.dart';
 import 'package:uc_marketplace/viewmodel/payment_viewmodel.dart';
 import 'package:uc_marketplace/viewmodel/pre_order_viewmodel.dart';
 import 'package:uc_marketplace/viewmodel/search_viewmodel.dart';
+import 'package:uc_marketplace/viewmodel/broadcast_viewmodel.dart';
+import 'package:uc_marketplace/data/response/status.dart'; 
 
 part 'splash.dart';
 part 'login.dart';
@@ -50,3 +52,4 @@ part 'checkout_page.dart';
 part 'map_picker.dart';
 part 'buyer_payment.dart';
 part 'seller_add_pickup.dart';
+part 'broadcast_detail_page.dart';

@@ -113,4 +113,21 @@ class PreOrderRepository {
       throw Exception('Gagal membuat pickup places: $e');
     }
   }
+
+  Future<List<PreOrderModel>> getPreOrdersByRestaurantId(int restaurantId) async {
+    try {
+      final data = await _supabase
+          .from('pre_orders')
+          .select()
+          .eq('restaurant_id', restaurantId) // Filter: Column Name, Value
+          .order(
+            'close_order_date',
+            ascending: true,
+          ); 
+
+      return (data as List).map((e) => PreOrderModel.fromJson(e)).toList();
+    } catch (e) {
+      throw Exception('Gagal mengambil data Pre-Order Restaurant ini: $e');
+    }
+  }
 }

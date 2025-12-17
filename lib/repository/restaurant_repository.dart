@@ -18,4 +18,19 @@ class RestaurantRepository {
       return null; // Return null jika tidak ketemu
     }
   }
+
+  Future<RestaurantModel?> getRestaurantByOwnerId(int ownerId) async {
+    try {
+      final data = await _supabase
+          .from('restaurants')
+          .select()
+          .eq('owner_id', ownerId) // CHECK THIS: Ensure this matches your DB column name
+          .single();
+
+      return RestaurantModel.fromJson(data);
+    } catch (e) {
+      // Returns null if no restaurant is found for this owner
+      return null; 
+    }
+  }
 }

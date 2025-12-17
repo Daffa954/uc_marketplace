@@ -94,6 +94,7 @@ import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uc_marketplace/router/router.dart';
 import 'package:uc_marketplace/viewmodel/auth_viewmodel.dart';
+import 'package:uc_marketplace/viewmodel/broadcast_viewmodel.dart';
 import 'package:uc_marketplace/viewmodel/home_viewmodel.dart';
 import 'package:uc_marketplace/viewmodel/order_viewmodel.dart';
 import 'package:uc_marketplace/viewmodel/payment_viewmodel.dart';
@@ -135,7 +136,16 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => AuthViewModel()),
         ChangeNotifierProvider(create: (_) => HomeViewModel()),
         ChangeNotifierProvider(create: (_) => SearchViewModel()),
-        ChangeNotifierProvider(create: (_) => PreOrderViewModel()),
+        ChangeNotifierProxyProvider<AuthViewModel, PreOrderViewModel>(
+          create: (context) => PreOrderViewModel(
+            authVM: Provider.of<AuthViewModel>(context, listen: false)
+          ),
+          update: (context, authVM, previousOrderVM) => 
+            // Setiap kali AuthVM berubah (misal login/logout), 
+            // OrderVM mendapat instance AuthVM terbaru
+            PreOrderViewModel(authVM: authVM),
+        ),
+        ChangeNotifierProvider(create: (_) => BroadcastViewModel()),
        ChangeNotifierProxyProvider<AuthViewModel, OrderViewModel>(
           create: (context) => OrderViewModel(
             authVM: Provider.of<AuthViewModel>(context, listen: false)
