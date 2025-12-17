@@ -4,7 +4,7 @@ import 'package:uc_marketplace/model/model.dart';
 class OrderRepository {
   final SupabaseClient _supabase = Supabase.instance.client;
 
-  Future<void> createOrder({
+  Future<int> createOrder({
     required OrderModel order,
     required List<OrderItemModel> items,
   }) async {
@@ -45,8 +45,9 @@ class OrderRepository {
       // 4. Insert Detail Items
       if (itemsData.isNotEmpty) {
         await _supabase.from('order_items').insert(itemsData);
+        
       }
-      
+      return newOrderId;
     } catch (e) {
       // Lempar error agar bisa ditangkap ViewModel
       throw Exception("Repository Error: $e");

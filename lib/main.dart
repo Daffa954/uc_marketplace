@@ -96,6 +96,7 @@ import 'package:uc_marketplace/router/router.dart';
 import 'package:uc_marketplace/viewmodel/auth_viewmodel.dart';
 import 'package:uc_marketplace/viewmodel/home_viewmodel.dart';
 import 'package:uc_marketplace/viewmodel/order_viewmodel.dart';
+import 'package:uc_marketplace/viewmodel/payment_viewmodel.dart';
 import 'package:uc_marketplace/viewmodel/pre_order_viewmodel.dart';
 import 'package:uc_marketplace/viewmodel/search_viewmodel.dart';
 
@@ -144,6 +145,7 @@ class MyApp extends StatelessWidget {
             // OrderVM mendapat instance AuthVM terbaru
             OrderViewModel(authVM: authVM),
         ),
+        ChangeNotifierProvider(create: (_) => PaymentViewModel()),
       ],
       child: MaterialApp.router(
         routerConfig: AppRouter.router, // Menggunakan Router yang sudah dipisah

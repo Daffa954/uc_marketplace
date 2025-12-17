@@ -5,7 +5,7 @@ import 'package:uc_marketplace/viewmodel/auth_viewmodel.dart';
 
 class OrderViewModel with ChangeNotifier {
   final _repo = OrderRepository();
-  
+
   final AuthViewModel _authVM;
 
   // Constructor menerima AuthVM
@@ -13,8 +13,8 @@ class OrderViewModel with ChangeNotifier {
   bool _isLoading = false;
   bool get isLoading => _isLoading;
 
-  Future<String?> submitOrder({
-    required int preOrderId, 
+  Future<int?> submitOrder({
+    required int preOrderId,
     required List<CartItem> cartItems, // Item di keranjang
     required String deliveryMode, // "Pick up" atau "Delivery"
     PoPickupModel? pickupLocation, // Objek lokasi (bisa null)
@@ -23,14 +23,14 @@ class OrderViewModel with ChangeNotifier {
     // --- 1. VALIDASI USER LANGSUNG DARI SUMBERNYA ---
     final user = _authVM.currentUser;
     if (user == null || user.userId == null) {
-      return "User belum login atau sesi habis.";
+      throw "User belum login atau sesi habis.";
     }
     if (cartItems.isEmpty) {
-      return "Keranjang kosong.";
+      throw "Keranjang kosong.";
     }
 
     if (deliveryMode == "Pick up" && pickupLocation == null) {
-      return "Harap pilih lokasi pengambilan terlebih dahulu.";
+      throw "Harap pilih lokasi pengambilan terlebih dahulu.";
     }
 
     _isLoading = true;
@@ -78,12 +78,17 @@ class OrderViewModel with ChangeNotifier {
       }).toList();
 
       // --- 5. CALL REPOSITORY ---
-      await _repo.createOrder(order: orderHeader, items: dbItems);
+      // await _repo.createOrder(order: orderHeader, items: dbItems);
+      int newOrderId = await _repo.createOrder(
+        order: orderHeader,
+        items: dbItems,
+      );
 
-      return null; // SUKSES (Tidak ada error)
+      return newOrderId; // SUKSES: Return ID
+     
     } catch (e) {
       debugPrint("Checkout Error: $e");
-      return "Gagal membuat pesanan: ${e.toString()}";
+      throw "Gagal membuat pesanan: ${e.toString()}";
     } finally {
       _isLoading = false;
       notifyListeners();

@@ -53,29 +53,47 @@ class AppRouter {
                       return MenuDetailPage(menu: menu);
                     },
                   ),
-                 GoRoute(
-  path: 'checkout', // Path: /buyer/home/checkout
-  parentNavigatorKey: rootNavigatorKey,
-  builder: (context, state) {
-    // 1. Ambil Map extras
-    final extras = state.extra as Map<String, dynamic>;
-    
-    // 2. Extract data sesuai key yang dikirim
-    final preOrder = extras['preOrder'] as PreOrderModel;
-    final items = extras['items'] as List<MenuModel>;
-    
-    // 3. AMBIL PICKUP LIST (Penambahan Baru)
-    // Pastikan casting-nya ke List<PoPickupModel>
-    final pickupList = extras['pickupList'] as List<PoPickupModel>; 
+                  GoRoute(
+                    path: 'checkout', // Path: /buyer/home/checkout
+                    parentNavigatorKey: rootNavigatorKey,
+                    builder: (context, state) {
+                      // 1. Ambil Map extras
+                      final extras = state.extra as Map<String, dynamic>;
 
-    // 4. Kirim ke Constructor CheckoutPage
-    return CheckoutPage(
-      preOrder: preOrder, 
-      rawItems: items,
-      pickupList: pickupList, // <--- Masukkan di sini
-    );
-  },
-),
+                      // 2. Extract data sesuai key yang dikirim
+                      final preOrder = extras['preOrder'] as PreOrderModel;
+                      final items = extras['items'] as List<MenuModel>;
+
+                      // 3. AMBIL PICKUP LIST (Penambahan Baru)
+                      // Pastikan casting-nya ke List<PoPickupModel>
+                      final pickupList =
+                          extras['pickupList'] as List<PoPickupModel>;
+
+                      // 4. Kirim ke Constructor CheckoutPage
+                      return CheckoutPage(
+                        preOrder: preOrder,
+                        rawItems: items,
+                        pickupList: pickupList, // <--- Masukkan di sini
+                      );
+                    },
+                  ),
+                  GoRoute(
+                    path: 'payment/:orderId', // orderId jadi bagian URL
+                    name: 'payment',
+                    builder: (context, state) {
+                      return PaymentPage(
+                        // Ambil dari URL path
+                        orderId: int.parse(state.pathParameters['orderId']!),
+                        // Ambil dari ?query=...
+                        totalAmount: double.parse(
+                          state.uri.queryParameters['total']!,
+                        ),
+                        restaurantId: int.parse(
+                          state.uri.queryParameters['resto']!,
+                        ),
+                      );
+                    },
+                  ),
                 ],
               ),
             ],

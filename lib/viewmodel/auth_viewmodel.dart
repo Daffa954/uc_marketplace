@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uc_marketplace/model/enums.dart';
 import 'package:uc_marketplace/model/model.dart';
 import 'package:uc_marketplace/repository/auth_repository.dart';
 
 class AuthViewModel with ChangeNotifier {
+  final SupabaseClient _supabase = Supabase.instance.client;
   final _authRepo = AuthRepository();
 
   bool _isLoading = false;
@@ -17,7 +19,23 @@ class AuthViewModel with ChangeNotifier {
     _isLoading = value;
     notifyListeners();
   }
+AuthViewModel() {
+    // Panggil fungsi load session
+    _loadUserSession();
+  }
 
+  Future<void> _loadUserSession() async {
+    try {
+      final user = await _authRepo.getCurrentSession();
+      if (user != null) {
+        _currentUser = user;
+        notifyListeners(); // <--- TAMBAHAN WAJIB: Kabari UI bahwa user sudah dimuat ulang
+      }
+    } catch (e) {
+      debugPrint("Gagal load session: $e");
+    }
+  }
+  
   // --- FUNGSI LOGIN ---
   Future<void> login(
     String email,
@@ -140,11 +158,20 @@ class AuthViewModel with ChangeNotifier {
     }
   }
 
-  // --- LOGOUT ---
-  Future<void> logout(BuildContext context) async {
-    await _authRepo.logout();
-    _currentUser = null;
-    notifyListeners();
-    if (context.mounted) context.go('/login');
+ Future<void> logout(BuildContext context) async {
+    setLoading(true);
+    try {
+      await _authRepo.logout(); // Hapus sesi Supabase
+      _currentUser = null;      // Hapus data di RAM
+      notifyListeners();        // Kabari UI
+      
+      if (context.mounted) {
+        context.go('/login');   // Pindah ke halaman login
+      }
+    } catch (e) {
+      debugPrint("Logout error: $e");
+    } finally {
+      setLoading(false);
+    }
   }
 }

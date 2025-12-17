@@ -19,7 +19,7 @@ class CheckoutPage extends StatefulWidget {
 class _CheckoutPageState extends State<CheckoutPage> {
   // State UI
   List<CartItem> _cartItems = [];
-  String _selectedDelivery = "Pick up"; 
+  String _selectedDelivery = "Pick up";
   PoPickupModel? _selectedPickup;
   final TextEditingController _noteController = TextEditingController();
 
@@ -83,9 +83,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
     // 1. Panggil ViewModel
     final orderVM = Provider.of<OrderViewModel>(context, listen: false);
 
-    // 2. Kirim Data Mentah ke VM
-    // VM yang akan validasi User, Lokasi, dan hitung Total Final ke DB.
-    final String? errorMessage = await orderVM.submitOrder(
+    final int? newOrderId = await orderVM.submitOrder(
       preOrderId: widget.preOrder.preOrderId!,
       cartItems: _cartItems,
       deliveryMode: _selectedDelivery,
@@ -96,36 +94,46 @@ class _CheckoutPageState extends State<CheckoutPage> {
     // 3. Handle Respon UI
     if (!mounted) return;
 
-    if (errorMessage == null) {
+    if (newOrderId != null) {
       // SUKSES
       showDialog(
         context: context,
         barrierDismissible: false,
         builder: (ctx) => AlertDialog(
           content: const Column(
-            mainAxisSize: MainAxisSize.min, 
+            mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.check_circle, color: Colors.green, size: 60), 
-              SizedBox(height: 10), 
-              Text("Order Berhasil Dibuat!")
-            ]
+              Icon(Icons.check_circle, color: Colors.green, size: 60),
+              SizedBox(height: 10),
+              Text("Order Berhasil Dibuat!"),
+            ],
           ),
           actions: [
             TextButton(
-              onPressed: () => context.go('/buyer/home'), 
-              child: const Text("OK")
-            )
+              onPressed: () {
+                Navigator.pop(ctx);
+
+                context.pushReplacementNamed(
+                  'payment',
+                  pathParameters: {'orderId': newOrderId.toString()},
+                  queryParameters: {
+                    'total': _uiTotalPrice.toString(),
+                    'resto': (widget.preOrder.restaurantId ?? 0).toString(),
+                  },
+                );
+              },
+              child: const Text("Bayar Sekarang"),
+            ),
           ],
         ),
       );
     } else {
-      // GAGAL (Tampilkan pesan error dari VM)
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(errorMessage), 
+          content: Text("Terjadi Kesalahan"),
           backgroundColor: Colors.red,
           behavior: SnackBarBehavior.floating,
-        )
+        ),
       );
     }
   }
@@ -134,14 +142,19 @@ class _CheckoutPageState extends State<CheckoutPage> {
   void _showPickupSelector() {
     showModalBottomSheet(
       context: context,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
       builder: (context) {
         return Container(
           padding: const EdgeInsets.all(20),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text("Pilih Lokasi Pengambilan", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+              const Text(
+                "Pilih Lokasi Pengambilan",
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+              ),
               const SizedBox(height: 16),
               ListView.separated(
                 shrinkWrap: true,
@@ -150,9 +163,11 @@ class _CheckoutPageState extends State<CheckoutPage> {
                 itemBuilder: (ctx, index) {
                   final item = widget.pickupList[index];
                   bool isSelected = item == _selectedPickup;
-                  
+
                   // Ambil gambar pertama atau placeholder
-                  String imgUrl = (item.photoLocation != null && item.photoLocation!.isNotEmpty)
+                  String imgUrl =
+                      (item.photoLocation != null &&
+                          item.photoLocation!.isNotEmpty)
                       ? item.photoLocation!.first
                       : "https://placehold.co/100x100?text=No+Img";
 
@@ -167,15 +182,32 @@ class _CheckoutPageState extends State<CheckoutPage> {
                       // [PERBAIKAN] Tambahkan errorBuilder
                       child: Image.network(
                         imgUrl,
-                        width: 50, height: 50, fit: BoxFit.cover,
+                        width: 50,
+                        height: 50,
+                        fit: BoxFit.cover,
                         errorBuilder: (context, error, stackTrace) {
-                          return Container(width: 50, height: 50, color: Colors.grey[300], child: const Icon(Icons.broken_image, size: 20));
+                          return Container(
+                            width: 50,
+                            height: 50,
+                            color: Colors.grey[300],
+                            child: const Icon(Icons.broken_image, size: 20),
+                          );
                         },
                       ),
                     ),
-                    title: Text(item.address ?? "Lokasi ${index + 1}", style: const TextStyle(fontWeight: FontWeight.bold)),
-                    subtitle: Text("${item.startTime?.substring(0,5)} - ${item.endTime?.substring(0,5)} WIB"),
-                    trailing: isSelected ? const Icon(Icons.check_circle, color: Color(0xFFFF7F27)) : null,
+                    title: Text(
+                      item.address ?? "Lokasi ${index + 1}",
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    subtitle: Text(
+                      "${item.startTime?.substring(0, 5)} - ${item.endTime?.substring(0, 5)} WIB",
+                    ),
+                    trailing: isSelected
+                        ? const Icon(
+                            Icons.check_circle,
+                            color: Color(0xFFFF7F27),
+                          )
+                        : null,
                   );
                 },
               ),
@@ -190,10 +222,10 @@ class _CheckoutPageState extends State<CheckoutPage> {
   Widget build(BuildContext context) {
     // Helper Image URL
     String locationImage = "https://placehold.co/150x150?text=Location";
-    
+
     // Cek apakah ada foto di array
-    if (_selectedPickup != null && 
-        _selectedPickup!.photoLocation != null && 
+    if (_selectedPickup != null &&
+        _selectedPickup!.photoLocation != null &&
         _selectedPickup!.photoLocation!.isNotEmpty) {
       locationImage = _selectedPickup!.photoLocation!.first;
     }
@@ -201,10 +233,19 @@ class _CheckoutPageState extends State<CheckoutPage> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text("Checkout", style: TextStyle(color: Color(0xFFFF7F27), fontWeight: FontWeight.bold)),
+        title: const Text(
+          "Checkout",
+          style: TextStyle(
+            color: Color(0xFFFF7F27),
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         backgroundColor: Colors.white,
         elevation: 0,
-        leading: IconButton(icon: const Icon(Icons.arrow_back, color: Colors.black), onPressed: () => context.pop()),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          onPressed: () => context.pop(),
+        ),
       ),
       body: Column(
         children: [
@@ -224,15 +265,27 @@ class _CheckoutPageState extends State<CheckoutPage> {
                   ),
                   const SizedBox(height: 20),
 
-GestureDetector(
-                    onTap: () { if (widget.pickupList.length > 1) _showPickupSelector(); },
+                  GestureDetector(
+                    onTap: () {
+                      if (widget.pickupList.length > 1) _showPickupSelector();
+                    },
                     child: Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: widget.pickupList.length > 1 ? const Color(0xFFFF7F27) : Colors.transparent),
-                        boxShadow: [BoxShadow(color: Colors.grey.withOpacity(0.1), blurRadius: 10, offset: const Offset(0, 4))],
+                        border: Border.all(
+                          color: widget.pickupList.length > 1
+                              ? const Color(0xFFFF7F27)
+                              : Colors.transparent,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.grey.withOpacity(0.1),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
                       ),
                       child: Row(
                         children: [
@@ -240,10 +293,20 @@ GestureDetector(
                             borderRadius: BorderRadius.circular(12),
                             // [PERBAIKAN] Tambahkan errorBuilder
                             child: Image.network(
-                              locationImage, 
-                              width: 70, height: 70, fit: BoxFit.cover,
+                              locationImage,
+                              width: 70,
+                              height: 70,
+                              fit: BoxFit.cover,
                               errorBuilder: (context, error, stackTrace) {
-                                return Container(width: 70, height: 70, color: Colors.grey[300], child: const Icon(Icons.map, color: Colors.grey));
+                                return Container(
+                                  width: 70,
+                                  height: 70,
+                                  color: Colors.grey[300],
+                                  child: const Icon(
+                                    Icons.map,
+                                    color: Colors.grey,
+                                  ),
+                                );
                               },
                             ),
                           ),
@@ -254,24 +317,54 @@ GestureDetector(
                               children: [
                                 Row(
                                   children: [
-                                    const Text("Lokasi Pengambilan", style: TextStyle(color: Colors.grey, fontSize: 10, fontWeight: FontWeight.bold)),
+                                    const Text(
+                                      "Lokasi Pengambilan",
+                                      style: TextStyle(
+                                        color: Colors.grey,
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
                                     if (widget.pickupList.length > 1)
-                                      const Text(" (Ubah)", style: TextStyle(color: Color(0xFFFF7F27), fontSize: 10, fontWeight: FontWeight.bold)),
+                                      const Text(
+                                        " (Ubah)",
+                                        style: TextStyle(
+                                          color: Color(0xFFFF7F27),
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
                                   ],
                                 ),
                                 const SizedBox(height: 4),
-                                Text(_selectedPickup?.address ?? "Lokasi belum ditentukan", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14), maxLines: 2, overflow: TextOverflow.ellipsis),
+                                Text(
+                                  _selectedPickup?.address ??
+                                      "Lokasi belum ditentukan",
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14,
+                                  ),
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
                                 const SizedBox(height: 4),
                                 Text(
                                   _selectedPickup != null
-                                      ? "${_selectedPickup!.date} • ${_selectedPickup!.startTime?.substring(0,5)} - ${_selectedPickup!.endTime?.substring(0,5)}"
+                                      ? "${_selectedPickup!.date} • ${_selectedPickup!.startTime?.substring(0, 5)} - ${_selectedPickup!.endTime?.substring(0, 5)}"
                                       : "-",
-                                  style: const TextStyle(color: Colors.grey, fontSize: 11),
+                                  style: const TextStyle(
+                                    color: Colors.grey,
+                                    fontSize: 11,
+                                  ),
                                 ),
                               ],
                             ),
                           ),
-                          if (widget.pickupList.length > 1) const Icon(Icons.keyboard_arrow_down, color: Colors.grey),
+                          if (widget.pickupList.length > 1)
+                            const Icon(
+                              Icons.keyboard_arrow_down,
+                              color: Colors.grey,
+                            ),
                         ],
                       ),
                     ),
@@ -279,32 +372,49 @@ GestureDetector(
                   const SizedBox(height: 24),
 
                   // 3. LIST ITEM
-                  const Text("List Items", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  const Text(
+                    "List Items",
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
                   const SizedBox(height: 12),
                   ListView.separated(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
                     itemCount: _cartItems.length,
-                    separatorBuilder: (context, index) => const Divider(height: 30),
+                    separatorBuilder: (context, index) =>
+                        const Divider(height: 30),
                     itemBuilder: (context, index) => _buildCartItemCard(index),
                   ),
 
                   const SizedBox(height: 24),
 
                   // 4. CATATAN PESANAN
-                  const Text("Catatan Pesanan", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                  const Text(
+                    "Catatan Pesanan",
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
                   const SizedBox(height: 8),
                   TextField(
                     controller: _noteController,
                     maxLines: 2,
                     decoration: InputDecoration(
-                      hintText: "Contoh: Jangan terlalu pedas, bungkus terpisah...",
-                      hintStyle: const TextStyle(color: Colors.grey, fontSize: 12),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey.shade300)),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      hintText:
+                          "Contoh: Jangan terlalu pedas, bungkus terpisah...",
+                      hintStyle: const TextStyle(
+                        color: Colors.grey,
+                        fontSize: 12,
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: Colors.grey.shade300),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
                     ),
                   ),
-                  
+
                   const SizedBox(height: 24),
                 ],
               ),
@@ -316,7 +426,13 @@ GestureDetector(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
               color: Colors.white,
-              boxShadow: [BoxShadow(color: Colors.grey.withOpacity(0.1), blurRadius: 10, offset: const Offset(0, -4))],
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.grey.withOpacity(0.1),
+                  blurRadius: 10,
+                  offset: const Offset(0, -4),
+                ),
+              ],
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -325,30 +441,59 @@ GestureDetector(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Text("Total", style: TextStyle(fontWeight: FontWeight.bold)),
+                    const Text(
+                      "Total",
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
                     // Gunakan _uiTotalPrice untuk tampilan
-                    Text("Rp ${_uiTotalPrice.toStringAsFixed(0)}", style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                    Text(
+                      "Rp ${_uiTotalPrice.toStringAsFixed(0)}",
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ],
                 ),
                 Consumer<OrderViewModel>(
                   builder: (context, orderVM, child) {
                     return ElevatedButton(
                       // Matikan tombol jika VM sedang loading
-                      onPressed: orderVM.isLoading ? null : () => _processPayment(),
+                      onPressed: orderVM.isLoading
+                          ? null
+                          : () => _processPayment(),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFFFF7F27),
-                        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 32,
+                          vertical: 12,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
-                      child: orderVM.isLoading 
-                        ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                        : const Text("Place Order", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                      child: orderVM.isLoading
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 2,
+                              ),
+                            )
+                          : const Text(
+                              "Place Order",
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                     );
-                  }
-                )
+                  },
+                ),
               ],
             ),
-          )
+          ),
         ],
       ),
     );
@@ -366,7 +511,15 @@ GestureDetector(
             color: isSelected ? const Color(0xFFFF7F27) : Colors.grey[200],
             borderRadius: BorderRadius.circular(8),
           ),
-          child: Text(label, textAlign: TextAlign.center, style: TextStyle(color: isSelected ? Colors.white : Colors.black, fontSize: 12, fontWeight: FontWeight.bold)),
+          child: Text(
+            label,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: isSelected ? Colors.white : Colors.black,
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
         ),
       ),
     );
@@ -377,26 +530,84 @@ GestureDetector(
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        ClipRRect(borderRadius: BorderRadius.circular(12), child: Image.network(item.menu.image ?? "https://placehold.co/100x100", width: 80, height: 80, fit: BoxFit.cover)),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(12),
+          child: Image.network(
+            item.menu.image ?? "https://placehold.co/100x100",
+            width: 80,
+            height: 80,
+            fit: BoxFit.cover,
+          ),
+        ),
         const SizedBox(width: 12),
         Expanded(
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-              Expanded(child: Text(item.menu.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16), maxLines: 1, overflow: TextOverflow.ellipsis)),
-              InkWell(onTap: () => setState(() { _cartItems.removeAt(index); if(_cartItems.isEmpty) context.pop(); }), child: const Icon(Icons.cancel, color: Colors.red, size: 20))
-            ]),
-            const SizedBox(height: 4),
-            Text(item.menu.type.toString().split('.').last, style: const TextStyle(color: Colors.grey, fontSize: 10)),
-            const SizedBox(height: 8),
-            Text("Rp ${item.menu.price}", style: const TextStyle(fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
-            Row(mainAxisAlignment: MainAxisAlignment.end, children: [
-              InkWell(onTap: () => _decrement(index), child: const Padding(padding: EdgeInsets.symmetric(horizontal: 8), child: Icon(Icons.remove, size: 18))),
-              Text("${item.quantity}", style: const TextStyle(fontWeight: FontWeight.bold)),
-              InkWell(onTap: () => _increment(index), child: const Padding(padding: EdgeInsets.symmetric(horizontal: 8), child: Icon(Icons.add, size: 18))),
-            ])
-          ]),
-        )
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Text(
+                      item.menu.name,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  InkWell(
+                    onTap: () => setState(() {
+                      _cartItems.removeAt(index);
+                      if (_cartItems.isEmpty) context.pop();
+                    }),
+                    child: const Icon(
+                      Icons.cancel,
+                      color: Colors.red,
+                      size: 20,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 4),
+              Text(
+                item.menu.type.toString().split('.').last,
+                style: const TextStyle(color: Colors.grey, fontSize: 10),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                "Rp ${item.menu.price}",
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  InkWell(
+                    onTap: () => _decrement(index),
+                    child: const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 8),
+                      child: Icon(Icons.remove, size: 18),
+                    ),
+                  ),
+                  Text(
+                    "${item.quantity}",
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  InkWell(
+                    onTap: () => _increment(index),
+                    child: const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 8),
+                      child: Icon(Icons.add, size: 18),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
       ],
     );
   }
