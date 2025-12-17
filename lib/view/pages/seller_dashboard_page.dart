@@ -128,7 +128,7 @@ class _SellerDashboardPageState extends State<SellerDashboardPage> {
         onPressed: () {
           if (selectedCategory == 'PRE-ORDER') {
             // Navigate to PO Form
-            context.go('/seller/home/po-form'); 
+            context.go('/seller/home/add-preorder'); 
           } else {
             // Navigate to Menu Form
             context.go('/seller/home/menu-form', extra: null);
