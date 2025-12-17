@@ -21,30 +21,29 @@ class PreOrderRepository {
     }
   }
 
- // --- 2. AMBIL MENU SPESIFIK UNTUK PO TERTENTU (CRITICAL FIX) ---
+  // --- 2. AMBIL MENU SPESIFIK UNTUK PO TERTENTU (CRITICAL FIX) ---
   Future<List<MenuModel>> getMenusByPreOrder(int preOrderId) async {
     try {
-     
       final data = await _supabase
           .from('pre_order_menu')
-          .select('pre_order_menu_id, menus(*)') 
+          .select('pre_order_menu_id, menus(*)')
           .eq('pre_order_id', preOrderId);
 
-      
+      return (data as List)
+          .map((e) {
+            if (e['menus'] == null) return null;
 
-      return (data as List).map((e) {
-        if (e['menus'] == null) return null;
+            final Map<String, dynamic> menuData = Map<String, dynamic>.from(
+              e['menus'],
+            );
 
-      
-        final Map<String, dynamic> menuData = Map<String, dynamic>.from(e['menus']);
-        
-        // Inject ID Relasi agar tidak NULL
-        menuData['pre_order_menu_id'] = e['pre_order_menu_id']; 
-        
-      
-        return MenuModel.fromJson(menuData);
-      }).whereType<MenuModel>().toList(); // Filter null jika ada data kotor
+            // Inject ID Relasi agar tidak NULL
+            menuData['pre_order_menu_id'] = e['pre_order_menu_id'];
 
+            return MenuModel.fromJson(menuData);
+          })
+          .whereType<MenuModel>()
+          .toList(); // Filter null jika ada data kotor
     } catch (e) {
       throw Exception('Gagal mengambil menu PO: $e');
     }
@@ -52,9 +51,7 @@ class PreOrderRepository {
 
   Future<List<MenuModel>> getAllPreOrderMenus() async {
     try {
-      final data = await _supabase
-          .from('pre_order_menu')
-          .select('menus(*)'); 
+      final data = await _supabase.from('pre_order_menu').select('menus(*)');
 
       final List<MenuModel> allMenus = (data as List).map((e) {
         return MenuModel.fromJson(e['menus']);
@@ -86,6 +83,34 @@ class PreOrderRepository {
       return (data as List).map((e) => PoPickupModel.fromJson(e)).toList();
     } catch (e) {
       return []; // Return list kosong jika error/tidak ada
+    }
+  }
+
+  // --- CREATE PICKUP PLACES UNTUK PO TERTENTU ---
+  Future<void> createPickupPlaces(
+    int preOrderId,
+    List<PoPickupModel> pickupPlaces,
+  ) async {
+    try {
+      final List<Map<String, dynamic>> insertData = pickupPlaces.map((place) {
+        return {
+          'pre_order_id': preOrderId, // Primary/Foreign Key
+          'date': place.date, // Matches schema
+          'start_time': place.startTime, // Matches schema
+          'end_time': place.endTime, // Matches schema
+          'address': place.address, // Maps to 'address' in schema
+          'detail_address': place.detailAddress, // Maps to 'detail_address'
+          'longitude': place.longitude, // Matches schema
+          'altitude': place.latitude, // ATTENTION: Using schema name 'altitude'
+          'photo_location':
+              place.photoLocation, // Maps to 'photo_location(json)'
+        };
+      }).toList();
+
+      // Batch insert into Supabase
+      await _supabase.from('po_pickup').insert(insertData);
+    } catch (e) {
+      throw Exception('Gagal membuat pickup places: $e');
     }
   }
 }

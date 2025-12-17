@@ -62,4 +62,26 @@ List<PoPickupModel> _pickupList = [];
       notifyListeners();
     }
   }
+
+  // for creating PO pickup places
+  Future<bool> createPoPickupPlaces(int preOrderId, List<PoPickupModel> pickupPlaces) async {
+    _isLoading = true;
+    notifyListeners(); // 1. Tell UI to show loading spinner
+
+    try {
+      // 2. Execute the repository call
+      await _repo.createPickupPlaces(preOrderId, pickupPlaces);
+      
+      // 3. Refresh the data (this syncs your local _pickupList with the DB)
+      await fetchMenusForPO(preOrderId);
+      
+      return true; // Return success to the UI
+    } catch (e) {
+      debugPrint("Error creating PO pickup places: $e");
+      return false; // Return failure
+    } finally {
+      _isLoading = false;
+      notifyListeners(); // 4. Tell UI to hide loading spinner
+    }
+  }
 }

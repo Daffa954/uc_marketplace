@@ -49,3 +49,4 @@ part 'seller_dashboard_page.dart';
 part 'checkout_page.dart';
 part 'map_picker.dart';
 part 'buyer_payment.dart';
+part 'seller_add_pickup.dart';

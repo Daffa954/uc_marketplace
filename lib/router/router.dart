@@ -134,6 +134,25 @@ class AppRouter {
                 routes: [
                   // Halaman Detail yang menutupi Bottom Bar
                   GoRoute(
+                    path: 'add-preorder',
+                    parentNavigatorKey:
+                        rootNavigatorKey, // Covers the bottom bar
+                    builder: (context, state) => const AddPreorderPage(),
+                    routes: [
+                      // 2. Sub-route for the Add Pickup Page we just built
+                      GoRoute(
+                        path:
+                            'pickup-place', // Full path: /seller/home/add-preorder/pickup-place
+                        parentNavigatorKey: rootNavigatorKey,
+                        builder: (context, state) {
+                          // Ensure the preOrderId is passed from the previous page
+                          final int id = state.extra as int;
+                          return AddPickupPage(preOrderId: id);
+                        },
+                      ),
+                    ],
+                  ),
+                  GoRoute(
                     path: 'menu-form',
                     parentNavigatorKey: rootNavigatorKey, // Pakai key static
                     builder: (context, state) {
