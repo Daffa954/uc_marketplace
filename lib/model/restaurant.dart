@@ -8,6 +8,7 @@ class RestaurantModel {
   final String? city;
   final String? province;
   final int? ownerId;
+  final String? bankAccount;
 
   RestaurantModel({
     this.id,
@@ -17,6 +18,7 @@ class RestaurantModel {
     this.city,
     this.province,
     this.ownerId,
+    this.bankAccount,
   });
 
   factory RestaurantModel.fromJson(Map<String, dynamic> json) {
@@ -28,6 +30,7 @@ class RestaurantModel {
       city: json['city'],
       province: json['province'],
       ownerId: json['owners_id'],
+      bankAccount: json['bank_account'],
     );
   }
 
@@ -38,5 +41,6 @@ class RestaurantModel {
     'city': city,
     'province': province,
     'owners_id': ownerId,
+    'bank_account': bankAccount,
   };
 }

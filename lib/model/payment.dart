@@ -7,13 +7,15 @@ class PaymentModel {
   final DateTime? paidAt;
   final PaymentMethod? method;
   final PaymentStatus status;
+  final String? paymentProof; // [BARU] Untuk menyimpan URL gambar
 
   PaymentModel({
     this.paymentId,
     this.orderId,
     this.paidAt,
     this.method,
-    this.status = PaymentStatus.PENDING, // Default value sesuai DB
+    this.status = PaymentStatus.PENDING,
+    this.paymentProof, // Default value sesuai DB
   });
 
   factory PaymentModel.fromJson(Map<String, dynamic> json) {
@@ -39,5 +41,6 @@ class PaymentModel {
     // Mengirim string ENUM ke Supabase (misal: 'QRIS', 'PAID')
     'method': method?.toString().split('.').last,
     'status': status.toString().split('.').last,
+    'payment_proof': paymentProof,
   };
 }

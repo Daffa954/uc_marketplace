@@ -21,17 +21,16 @@ class AuthRepository {
       // 2. Ambil Data Profil dari tabel 'users' untuk cek Role & Nama
       // Asumsi: user_id di tabel users adalah UUID yang sama dengan Auth UID
       // Jika di tabel users user_id adalah INT (Auto Inc), Anda perlu kolom tambahan 'auth_id' (UUID)
-      // TAPI, berdasarkan skrip SQL sebelumnya, user_id adalah BIGINT. 
+      // TAPI, berdasarkan skrip SQL sebelumnya, user_id adalah BIGINT.
       // Supaya aman, kita cari berdasarkan EMAIL karena email unik.
       final userData = await _supabase
           .from('users')
           .select()
-          .eq('email', email) 
+          .eq('email', email)
           .single();
 
       // 3. Kembalikan sebagai UserModel
       return UserModel.fromJson(userData);
-      
     } on AuthException catch (e) {
       if (e.message.toLowerCase().contains("email not confirmed")) {
         throw Exception("Email belum diverifikasi. Cek inbox Anda.");
@@ -62,7 +61,8 @@ class AuthRepository {
       if (authResponse.user == null) {
         throw Exception("Registrasi gagal.");
       }
-
+      // [PERUBAHAN] Ambil UUID yang baru saja dibuat oleh Supabase Auth
+      final String newAuthId = authResponse.user!.id;
       // 2. Simpan Data Profil ke tabel 'users' (Public Table)
       // Ingat: Jangan simpan password di sini!
       final newUser = UserModel(
@@ -72,15 +72,43 @@ class AuthRepository {
         phone: phone,
         role: role,
         isVerified: false, // Default false sampai email diklik (logic backend)
+        authId: newAuthId,
         token: null,
       );
 
       await _supabase.from('users').insert(newUser.toJson());
-
     } on AuthException catch (e) {
       throw Exception(e.message);
     } catch (e) {
       throw Exception("Gagal mendaftar: $e");
+    }
+  }
+
+  Future<UserModel?> getCurrentSession() async {
+    final session = _supabase.auth.currentSession;
+    final user = _supabase.auth.currentUser;
+
+    if (session == null || user == null) {
+      return null; 
+    }
+
+    if (session.isExpired) {
+      return null;
+    }
+
+    try {
+      // [PERUBAHAN] Cari user di tabel public berdasarkan auth_id (UUID)
+      // user.id di sini adalah UUID dari sesi auth
+      final userData = await _supabase
+          .from('users')
+          .select()
+          .eq('auth_id', user.id) 
+          .single();
+
+      return UserModel.fromJson(userData);
+    } catch (e) {
+      await logout(); 
+      return null;
     }
   }
 

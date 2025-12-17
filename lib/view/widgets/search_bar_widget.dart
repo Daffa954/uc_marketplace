@@ -10,7 +10,7 @@ class SearchBarWidget extends StatelessWidget {
     return GestureDetector(
       onTap: () {
        
-        context.push('/search');
+        context.push('/buyer/search');
       },
       child: Container(
         decoration: BoxDecoration(

@@ -9,4 +9,5 @@ class Const {
   static String supabaseUrl = dotenv.env['SUPABASE_URL'] ?? "";
   static String supabaseKey = dotenv.env['SUPABASE_KEY'] ?? "";
   static String get restUrl => "$supabaseUrl/rest/v1/";
+  
 }

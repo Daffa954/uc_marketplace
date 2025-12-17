@@ -95,6 +95,10 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uc_marketplace/router/router.dart';
 import 'package:uc_marketplace/viewmodel/auth_viewmodel.dart';
 import 'package:uc_marketplace/viewmodel/home_viewmodel.dart';
+import 'package:uc_marketplace/viewmodel/order_viewmodel.dart';
+import 'package:uc_marketplace/viewmodel/payment_viewmodel.dart';
+import 'package:uc_marketplace/viewmodel/pre_order_viewmodel.dart';
+import 'package:uc_marketplace/viewmodel/search_viewmodel.dart';
 
 import 'shared/shared.dart'; // Import Router Anda
 
@@ -130,6 +134,18 @@ class MyApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => AuthViewModel()),
         ChangeNotifierProvider(create: (_) => HomeViewModel()),
+        ChangeNotifierProvider(create: (_) => SearchViewModel()),
+        ChangeNotifierProvider(create: (_) => PreOrderViewModel()),
+       ChangeNotifierProxyProvider<AuthViewModel, OrderViewModel>(
+          create: (context) => OrderViewModel(
+            authVM: Provider.of<AuthViewModel>(context, listen: false)
+          ),
+          update: (context, authVM, previousOrderVM) => 
+            // Setiap kali AuthVM berubah (misal login/logout), 
+            // OrderVM mendapat instance AuthVM terbaru
+            OrderViewModel(authVM: authVM),
+        ),
+        ChangeNotifierProvider(create: (_) => PaymentViewModel()),
       ],
       child: MaterialApp.router(
         routerConfig: AppRouter.router, // Menggunakan Router yang sudah dipisah

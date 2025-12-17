@@ -8,6 +8,7 @@ class UserModel {
   final UserRole role;
   final String? token;
   final bool isVerified;
+  final String? authId;
   final DateTime? createdAt;
 
   UserModel({
@@ -18,6 +19,7 @@ class UserModel {
     this.role = UserRole.USER,
     this.token,
     this.isVerified = false,
+    this.authId,
     this.createdAt,
   });
 
@@ -30,6 +32,7 @@ class UserModel {
       role: enumFromString(UserRole.values, json['role']),
       token: json['token'],
       isVerified: json['is_verified'] ?? false,
+      authId: json['auth_id'],
       createdAt: json['created_at'] != null ? DateTime.parse(json['created_at']) : null,
     );
   }
@@ -40,6 +43,7 @@ class UserModel {
     'phone': phone,
     'role': role.toString().split('.').last, // Kirim string ke Supabase
     'token': token,
+    'auth_id': authId,
     'is_verified': isVerified,
   };
 }

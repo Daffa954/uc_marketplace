@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:uc_marketplace/model/model.dart';
 import 'package:uc_marketplace/repository/home_repository.dart';
+import 'package:uc_marketplace/repository/po_repository.dart';
 
 class HomeViewModel with ChangeNotifier {
   final _homeRepo = HomeRepository();
+  final _poRepo = PreOrderRepository();
 
   // State untuk Restaurant
   List<RestaurantModel> _restaurants = [];
@@ -12,6 +14,14 @@ class HomeViewModel with ChangeNotifier {
   // State untuk Menu
   List<MenuModel> _menus = [];
   List<MenuModel> get menus => _menus;
+
+// --- STATE LIST PO (Untuk Home Page) ---
+  List<PreOrderModel> _preOrders = [];
+  List<PreOrderModel> get preOrders => _preOrders;
+
+  // --- STATE MENU PO (Untuk Halaman Detail PO) ---
+  List<MenuModel> _pOMenus = [];
+  List<MenuModel> get pOMenus => _pOMenus;
 
   // State Loading & Error
   bool _isLoading = false;
@@ -34,10 +44,14 @@ class HomeViewModel with ChangeNotifier {
       final results = await Future.wait([
         _homeRepo.getRestaurants(),
         _homeRepo.getMenus(),
+        _poRepo.getActivePreOrders(),
+        _poRepo.getAllPreOrderMenus()
       ]);
 
       _restaurants = results[0] as List<RestaurantModel>;
       _menus = results[1] as List<MenuModel>;
+      _preOrders = results[2] as List<PreOrderModel>;
+      _pOMenus = results[3] as List<MenuModel>;
 
     } catch (e) {
       _errorMessage = e.toString();

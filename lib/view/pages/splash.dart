@@ -8,33 +8,37 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
+  
   @override
   void initState() {
     super.initState();
-    Timer(const Duration(seconds: 3), () {
-      // PERUBAHAN 1: Gunakan context.go untuk pindah halaman (replace stack)
-      if (mounted) {
-        context.go('/login'); 
-      }
+    // Panggil fungsi cek login setelah widget selesai dirender
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<AuthViewModel>(context, listen: false).checkLoginStatus(context);
     });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: MyApp.primaryOrange,
+      backgroundColor: Colors.white, 
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
-          children: const [
-            Icon(Icons.restaurant_menu_rounded, size: 100, color: Colors.white),
-            SizedBox(height: 20),
-            Text(
-              "FoodDelivery",
-              style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.white),
+          children: [
+            // Ganti dengan Logo Aplikasi Anda
+            Icon(Icons.shopping_bag_outlined, size: 80, color: Colors.green),
+            const SizedBox(height: 20),
+            const Text(
+              "UC Marketplace",
+              style: TextStyle(
+                fontSize: 24, 
+                fontWeight: FontWeight.bold,
+                color: Colors.green,
+              ),
             ),
-            SizedBox(height: 10),
-            CircularProgressIndicator(color: Colors.white),
+            const SizedBox(height: 20),
+            const CircularProgressIndicator(color: Colors.green), // Indikator loading
           ],
         ),
       ),

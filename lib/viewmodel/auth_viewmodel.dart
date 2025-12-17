@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uc_marketplace/model/enums.dart';
 import 'package:uc_marketplace/model/model.dart';
 import 'package:uc_marketplace/repository/auth_repository.dart';
 
-
 class AuthViewModel with ChangeNotifier {
+  final SupabaseClient _supabase = Supabase.instance.client;
   final _authRepo = AuthRepository();
 
   bool _isLoading = false;
@@ -18,14 +19,34 @@ class AuthViewModel with ChangeNotifier {
     _isLoading = value;
     notifyListeners();
   }
+AuthViewModel() {
+    // Panggil fungsi load session
+    _loadUserSession();
+  }
 
+  Future<void> _loadUserSession() async {
+    try {
+      final user = await _authRepo.getCurrentSession();
+      if (user != null) {
+        _currentUser = user;
+        notifyListeners(); // <--- TAMBAHAN WAJIB: Kabari UI bahwa user sudah dimuat ulang
+      }
+    } catch (e) {
+      debugPrint("Gagal load session: $e");
+    }
+  }
+  
   // --- FUNGSI LOGIN ---
-  Future<void> login(String email, String password, BuildContext context) async {
+  Future<void> login(
+    String email,
+    String password,
+    BuildContext context,
+  ) async {
     setLoading(true);
     try {
       final user = await _authRepo.login(email, password);
       _currentUser = user;
-      
+
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -64,13 +85,13 @@ class AuthViewModel with ChangeNotifier {
     setLoading(true);
     try {
       await _authRepo.register(
-        email: email, 
-        password: password, 
-        name: name, 
-        phone: phone, 
-        role: role
+        email: email,
+        password: password,
+        name: name,
+        phone: phone,
+        role: role,
       );
-      
+
       // SUKSES REGISTER -> TAMPILKAN DIALOG CEK EMAIL
       if (context.mounted) {
         showDialog(
@@ -86,7 +107,7 @@ class AuthViewModel with ChangeNotifier {
               TextButton(
                 onPressed: () {
                   Navigator.pop(ctx); // Tutup Dialog
-                  context.pop();      // Kembali ke Halaman Login
+                  context.pop(); // Kembali ke Halaman Login
                 },
                 child: const Text("OK, SIAP"),
               ),
@@ -105,11 +126,52 @@ class AuthViewModel with ChangeNotifier {
     }
   }
 
-  // --- LOGOUT ---
-  Future<void> logout(BuildContext context) async {
-    await _authRepo.logout();
-    _currentUser = null;
-    notifyListeners();
-    if(context.mounted) context.go('/login');
+  Future<void> checkLoginStatus(BuildContext context) async {
+    // Beri delay sedikit agar Splash Screen terlihat (estetika)
+    await Future.delayed(const Duration(seconds: 2));
+
+    try {
+      final user = await _authRepo.getCurrentSession();
+
+      if (user != null) {
+        // --- SESI DITEMUKAN ---
+        _currentUser = user; // Simpan ke state
+        notifyListeners();
+
+        if (context.mounted) {
+          // Redirect sesuai Role
+          if (user.role == UserRole.SELLER) {
+            context.go('/seller/home');
+          } else {
+            context.go('/buyer/home');
+          }
+        }
+      } else {
+        // --- TIDAK ADA SESI ---
+        if (context.mounted) {
+          context.go('/login');
+        }
+      }
+    } catch (e) {
+      // Jika error, lempar ke login
+      if (context.mounted) context.go('/login');
+    }
+  }
+
+ Future<void> logout(BuildContext context) async {
+    setLoading(true);
+    try {
+      await _authRepo.logout(); // Hapus sesi Supabase
+      _currentUser = null;      // Hapus data di RAM
+      notifyListeners();        // Kabari UI
+      
+      if (context.mounted) {
+        context.go('/login');   // Pindah ke halaman login
+      }
+    } catch (e) {
+      debugPrint("Logout error: $e");
+    } finally {
+      setLoading(false);
+    }
   }
 }
