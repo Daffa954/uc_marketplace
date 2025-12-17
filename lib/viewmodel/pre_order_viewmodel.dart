@@ -166,4 +166,59 @@ class PreOrderViewModel with ChangeNotifier {
       notifyListeners();
     }
   }
+
+  Future<bool> createFullPreOrder({
+    required PreOrderModel preOrder,
+    required List<PoPickupModel> pickups,
+    required List<int> menuIds,
+  }) async {
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      // 1. Get Current Restaurant ID (Ensure _currentRestaurant is loaded)
+      // If not loaded, you might need to fetch it or check auth
+      final restaurantId = _currentRestaurant?.id; 
+      if (restaurantId == null) throw Exception("Restaurant not found");
+
+      // 2. Create the PreOrder (Parent)
+      // We assume the repository returns the created object WITH the new ID
+      final createdPO = await _repo.createPreOrder(preOrder.copyWith(restaurantId: restaurantId));
+      final newPoId = createdPO.preOrderId; 
+
+      if (newPoId == null) throw Exception("Failed to get new PreOrder ID");
+
+      // 3. Create Pickups (Children)
+      // Assign the new PO ID to each pickup model
+      final pickupFutures = pickups.map((p) {
+        // Assuming you have a method to create ONE pickup or a bulk insert method
+        // Here we map the object to include the new preOrderId
+        return _repo.createPoPickup(p.copyWith(preOrderId: newPoId));
+      }).toList();
+
+      // 4. Create PreOrder Menus (Join Table)
+      final menuFutures = menuIds.map((menuId) {
+        final poMenu = PreOrderMenuModel(
+          preOrderId: newPoId,
+          menuId: menuId,
+        );
+        return _repo.createPreOrderMenu(poMenu);
+      }).toList();
+
+      // Run 3 and 4 in parallel
+      await Future.wait([...pickupFutures, ...menuFutures]);
+
+      // 5. Refresh List
+      await fetchPreOrders(); 
+      
+      return true;
+
+    } catch (e) {
+      debugPrint("Error creating full PO: $e");
+      return false;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
 }

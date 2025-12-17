@@ -137,7 +137,7 @@ class AppRouter {
                     path: 'add-preorder',
                     parentNavigatorKey:
                         rootNavigatorKey, // Covers the bottom bar
-                    builder: (context, state) => const AddPreorderPage(),
+                    builder: (context, state) => const SellerAddPreOrderPage(),
                     routes: [
                       // 2. Sub-route for the Add Pickup Page we just built
                       GoRoute(

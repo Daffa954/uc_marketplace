@@ -57,4 +57,28 @@ class PoPickupModel {
     'altitude': latitude, 
     'photo_location': photoLocation,
   };
+
+  PoPickupModel copyWith({
+    int? poPickupId,
+    int? preOrderId,
+    String? date,
+    String? startTime,
+    String? endTime,
+    String? address,
+    String? detailAddress,
+    double? longitude,
+    double? latitude,
+  }) {
+    return PoPickupModel(
+      poPickupId: poPickupId ?? this.poPickupId,
+      preOrderId: preOrderId ?? this.preOrderId,
+      date: date ?? this.date,
+      startTime: startTime ?? this.startTime,
+      endTime: endTime ?? this.endTime,
+      address: address ?? this.address,
+      detailAddress: detailAddress ?? this.detailAddress,
+      longitude: longitude ?? this.longitude,
+      latitude: latitude ?? this.latitude,
+    );
+  }
 }

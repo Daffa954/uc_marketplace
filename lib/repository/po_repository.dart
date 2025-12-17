@@ -130,4 +130,56 @@ class PreOrderRepository {
       throw Exception('Gagal mengambil data Pre-Order Restaurant ini: $e');
     }
   }
+
+  Future<PreOrderModel> createPreOrder(PreOrderModel preOrder) async {
+    try {
+      final data = preOrder.toJson();
+      // Remove ID so Supabase generates it
+      data.remove('pre_orders_id');
+      data.remove('preOrderId'); 
+
+      final res = await _supabase
+          .from('pre_orders')
+          .insert(data)
+          .select() // Select returns the full inserted row
+          .single();
+
+      return PreOrderModel.fromJson(res);
+    } catch (e) {
+      throw Exception("Failed to create PreOrder: $e");
+    }
+  }
+
+  Future<void> createPoPickup(PoPickupModel pickup) async {
+    try {
+      final data = pickup.toJson();
+      // Remove Child ID
+      data.remove('po_pickup_id');
+      data.remove('poPickupId');
+
+      // Ensure Foreign Key is present (ViewModel should have added it)
+      if (data['pre_order_id'] == null) {
+        throw Exception("PreOrder ID is missing for Pickup");
+      }
+
+      await _supabase.from('po_pickup').insert(data);
+    } catch (e) {
+      throw Exception("Failed to create Pickup: $e");
+    }
+  }
+
+  Future<void> createPreOrderMenu(PreOrderMenuModel poMenu) async {
+    try {
+      // Manual map creation is often safer for simple join tables
+      final data = {
+        'pre_order_id': poMenu.preOrderId,
+        'menu_id': poMenu.menuId,
+      };
+
+      await _supabase.from('pre_order_menus').insert(data);
+    } catch (e) {
+      throw Exception("Failed to link Menu: $e");
+    }
+  }
+
 }
