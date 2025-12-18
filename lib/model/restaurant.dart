@@ -7,7 +7,7 @@ class RestaurantModel {
   final String? address;
   final String? city;
   final String? province;
-  final int? ownerId;
+  final String? ownerId;
   final String? bankAccount;
 
   RestaurantModel({
@@ -29,7 +29,7 @@ class RestaurantModel {
       address: json['address'],
       city: json['city'],
       province: json['province'],
-      ownerId: json['owners_id'],
+      ownerId: json['owner_id'],
       bankAccount: json['bank_account'],
     );
   }
@@ -40,7 +40,7 @@ class RestaurantModel {
     'address': address,
     'city': city,
     'province': province,
-    'owners_id': ownerId,
+    'owner_id': ownerId,
     'bank_account': bankAccount,
   };
 }

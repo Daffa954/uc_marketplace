@@ -19,7 +19,8 @@ class AuthViewModel with ChangeNotifier {
     _isLoading = value;
     notifyListeners();
   }
-AuthViewModel() {
+
+  AuthViewModel() {
     // Panggil fungsi load session
     _loadUserSession();
   }
@@ -35,7 +36,7 @@ AuthViewModel() {
       debugPrint("Gagal load session: $e");
     }
   }
-  
+
   // --- FUNGSI LOGIN ---
   Future<void> login(
     String email,
@@ -158,15 +159,15 @@ AuthViewModel() {
     }
   }
 
- Future<void> logout(BuildContext context) async {
+  Future<void> logout(BuildContext context) async {
     setLoading(true);
     try {
       await _authRepo.logout(); // Hapus sesi Supabase
-      _currentUser = null;      // Hapus data di RAM
-      notifyListeners();        // Kabari UI
-      
+      _currentUser = null; // Hapus data di RAM
+      notifyListeners(); // Kabari UI
+
       if (context.mounted) {
-        context.go('/login');   // Pindah ke halaman login
+        context.go('/login'); // Pindah ke halaman login
       }
     } catch (e) {
       debugPrint("Logout error: $e");

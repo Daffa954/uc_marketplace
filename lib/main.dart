@@ -93,6 +93,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uc_marketplace/router/router.dart';
+import 'package:uc_marketplace/viewmodel/addEditMenu_viewmodel.dart';
 import 'package:uc_marketplace/viewmodel/auth_viewmodel.dart';
 import 'package:uc_marketplace/viewmodel/broadcast_viewmodel.dart';
 import 'package:uc_marketplace/viewmodel/home_viewmodel.dart';
@@ -156,6 +157,7 @@ class MyApp extends StatelessWidget {
             OrderViewModel(authVM: authVM),
         ),
         ChangeNotifierProvider(create: (_) => PaymentViewModel()),
+        ChangeNotifierProvider(create: (_) => AddEditMenuViewModel()),
       ],
       child: MaterialApp.router(
         routerConfig: AppRouter.router, // Menggunakan Router yang sudah dipisah

@@ -31,7 +31,16 @@ class PreOrderViewModel with ChangeNotifier {
 
   List<PoPickupModel> _pickupList = [];
   List<PoPickupModel> get pickupList => _pickupList;
+List<RestaurantModel> _ownedRestaurants = []; // List semua resto milik user
+List<RestaurantModel> get ownedRestaurants => _ownedRestaurants;
 
+// Fungsi ganti resto
+Future<void> changeRestaurant(RestaurantModel newResto) async {
+  _currentRestaurant = newResto;
+  notifyListeners();
+  // Refresh data menu/po berdasarkan resto yang baru dipilih
+  await initSellerDashboard(); 
+}
   // Constructor: Langsung ambil data PO saat ViewModel dibuat
   PreOrderViewModel({required AuthViewModel authVM})  : _authVM = authVM;
 
@@ -157,7 +166,9 @@ class PreOrderViewModel with ChangeNotifier {
     notifyListeners();
 
     try {
-      _currentRestaurant = await _restoRepo.getRestaurantByOwnerId(_authVM.currentUser!.userId!);
+      final restaurants = await _restoRepo.getRestaurantsByOwner();
+      _ownedRestaurants = restaurants;
+      _currentRestaurant = restaurants.isNotEmpty ? restaurants.first : null;
       _isLoading = false;
     } catch (e) {
       debugPrint("Error fetching restaurant: $e");

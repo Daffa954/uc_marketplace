@@ -3,7 +3,6 @@ import 'package:go_router/go_router.dart';
 import 'package:uc_marketplace/main_wrapper.dart';
 import 'package:uc_marketplace/model/model.dart';
 import 'package:uc_marketplace/view/pages/pages.dart';
-import 'package:uc_marketplace/view/pages/seller_edit_add_menu.dart';
 import 'package:uc_marketplace/view/widgets/menu_detail_page.dart';
 
 class AppRouter {
@@ -156,8 +155,7 @@ class AppRouter {
                     path: 'menu-form',
                     parentNavigatorKey: rootNavigatorKey, // Pakai key static
                     builder: (context, state) {
-                      final item = state.extra as MenuItem?;
-                      return AddEditMenuPage(item: item);
+                      return AddEditMenuPage();
                     },
                   ),
                 ],

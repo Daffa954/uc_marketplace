@@ -1,4 +1,4 @@
-part of 'package:uc_marketplace/view/pages/pages.dart';
+part of 'pages.dart'; // Sesuaikan dengan struktur project Anda
 
 class SellerDashboardPage extends StatefulWidget {
   const SellerDashboardPage({super.key});
@@ -8,350 +8,469 @@ class SellerDashboardPage extends StatefulWidget {
 }
 
 class _SellerDashboardPageState extends State<SellerDashboardPage> {
-
-  String selectedCategory = 'PRE-ORDER'; 
+  // State untuk Tab Aktif
+  String selectedCategory = 'PRE-ORDER';
+  
+  // [DEBUG] Variabel untuk menampung info user
+  String _debugUserName = "Loading...";
+  String _debugAuthId = "Loading...";
 
   @override
   void initState() {
     super.initState();
-    // 2. Fetch both PreOrders and Menus when page loads
+    // Fetch data awal saat halaman dibuka
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<PreOrderViewModel>().initSellerDashboard();
+      _fetchData();
+      _loadDebugInfo(); // Load info user untuk debugging
     });
+  }
+
+  // [DEBUG] Fungsi ambil info user dari Supabase
+  void _loadDebugInfo() {
+    final user = Supabase.instance.client.auth.currentUser;
+    if (user != null) {
+      setState(() {
+        // Ambil nama dari metadata, atau gunakan email jika nama kosong
+        _debugUserName = user.userMetadata?['name'] ?? user.email ?? "Unknown User";
+        _debugAuthId = user.id;
+      });
+    } else {
+      setState(() {
+        _debugUserName = "No User";
+        _debugAuthId = "-";
+      });
+    }
+  }
+
+  // Fungsi Refresh Data (Panggil ViewModel)
+  Future<void> _fetchData() async {
+    await context.read<PreOrderViewModel>().initSellerDashboard();
+  }
+
+  // --- LOGIC GANTI RESTORAN (POP UP) ---
+  void _showRestaurantSelector(BuildContext context, PreOrderViewModel viewModel) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) {
+        return Container(
+          padding: const EdgeInsets.all(20),
+          height: 450, 
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header Pop-up
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    "Pilih Cabang Restoran",
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  IconButton(
+                    onPressed: () => Navigator.pop(ctx),
+                    icon: const Icon(Icons.close),
+                  )
+                ],
+              ),
+              const Divider(),
+              const SizedBox(height: 10),
+              
+              // LIST RESTORAN
+              Expanded(
+                child: viewModel.ownedRestaurants.isEmpty
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.store_mall_directory_outlined, size: 50, color: Colors.grey[300]),
+                            const SizedBox(height: 10),
+                            const Text("Kamu belum punya restoran.", style: TextStyle(color: Colors.grey)),
+                          ],
+                        ),
+                      )
+                    : ListView.builder(
+                        itemCount: viewModel.ownedRestaurants.length,
+                        itemBuilder: (context, index) {
+                          final resto = viewModel.ownedRestaurants[index];
+                          // Cek apakah ini restoran yang sedang aktif
+                          // Pastikan model RestaurantModel punya field 'id' atau 'restaurantId'
+                          final bool isSelected = resto.id == viewModel.currentRestaurant?.id;
+
+                          return Container(
+                            margin: const EdgeInsets.only(bottom: 10),
+                            decoration: BoxDecoration(
+                              color: isSelected ? const Color(0xFFffe3c9) : Colors.white,
+                              borderRadius: BorderRadius.circular(12),
+                              border: isSelected 
+                                ? Border.all(color: const Color(0xFFFF8C42)) 
+                                : Border.all(color: Colors.grey.shade300),
+                            ),
+                            child: ListTile(
+                              leading: CircleAvatar(
+                                backgroundColor: const Color(0xFFFF8C42),
+                                child: Text(
+                                  resto.name.isNotEmpty ? resto.name[0].toUpperCase() : '?',
+                                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                              title: Text(
+                                resto.name, 
+                                style: TextStyle(fontWeight: isSelected ? FontWeight.bold : FontWeight.normal)
+                              ),
+                              trailing: isSelected ? const Icon(Icons.check_circle, color: Color(0xFFFF8C42)) : null,
+                              onTap: () {
+                                viewModel.changeRestaurant(resto); 
+                                Navigator.pop(ctx); 
+                              },
+                            ),
+                          );
+                        },
+                      ),
+              ),
+              
+              // TOMBOL TAMBAH RESTORAN BARU
+              const SizedBox(height: 10),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () async {
+                    Navigator.pop(ctx); // 1. Tutup Pop-up
+                    
+                    // 2. Buka Halaman Tambah Restoran
+                    // Menggunakan MaterialPageRoute agar kita bisa menunggu hasil (await)
+                    final result = await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => ChangeNotifierProvider(
+                          create: (_) => AddRestaurantViewModel(),
+                          child: const AddRestaurantPage(),
+                        ),
+                      ),
+                    );
+
+                    // 3. Jika berhasil tambah (result == true), Refresh Dashboard
+                    if (result == true) {
+                      _fetchData();
+                    }
+                  },
+                  icon: const Icon(Icons.add_business, color: Color(0xFFFF8C42)),
+                  label: const Text("Tambah Restoran Baru", style: TextStyle(color: Color(0xFFFF8C42))),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    side: const BorderSide(color: Color(0xFFFF8C42)),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final viewModel = context.watch<PreOrderViewModel>();
-
     final bool isPreOrderTab = selectedCategory == 'PRE-ORDER';
+    
+    // Tentukan data yang ditampilkan berdasarkan Tab
+    final dataList = isPreOrderTab ? viewModel.preOrders : viewModel.menus;
 
     return Scaffold(
-      body: Column(
-        children: [
-          // Top Image Section
-          Container(
-            height: 250,
-            width: double.infinity,
-            decoration: const BoxDecoration(
-              image: DecorationImage(
-                image: AssetImage('assets/images/banner.png'), // Use your banner image
-                fit: BoxFit.cover,
-              ),
+      backgroundColor: Colors.grey[50],
+      
+      // [BARU] APPBAR DEBUGGING
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              "Hi, $_debugUserName", // Nama User
+              style: const TextStyle(color: Colors.black, fontSize: 16, fontWeight: FontWeight.bold),
             ),
-          ),
-          
-          // Business Info Section (White background)
-          Container(
-            color: Colors.white,
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  viewModel.currentRestaurant?.name ?? 'No name available',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  viewModel.currentRestaurant?.description ?? 'No description available',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey[700],
-                  ),
-                ),
-              ],
+            Text(
+              "ID: $_debugAuthId", // Auth ID (UUID)
+              style: TextStyle(color: Colors.grey[600], fontSize: 10),
             ),
-          ),
-          
-          // Orange Section with Tabs and Products
-          Expanded(
-            child: Container(
-              decoration: const BoxDecoration(
-                color: Color(0xFFffe3c9),
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(30),
-                  topRight: Radius.circular(30),
-                ),
-              ),
-              child: Column(
-                children: [
-                  // Category Tabs
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        _buildCategoryTab('PRE-ORDER'),
-                        _buildCategoryTab('MENU')
-                      ],
-                    ),
-                  ),
-                  
-                  // PreOrder List (Using ViewModel)
-                  Expanded(
-                    child: viewModel.isLoading
-                        ? const Center(child: CircularProgressIndicator())
-                        : ListView.builder(
-                            padding: const EdgeInsets.symmetric(horizontal: 16),
-                            // Check which list length to use
-                            itemCount: isPreOrderTab 
-                                ? viewModel.preOrders.length 
-                                : viewModel.menus.length,
-                            itemBuilder: (context, index) {
-                              if (isPreOrderTab) {
-                                // Show PreOrder Item
-                                return PreOrderItem(
-                                  preOrder: viewModel.preOrders[index],
-                                );
-                              } else {
-                                // Show Menu Item (ProductItem)
-                                return ProductItem(
-                                  menu: viewModel.menus[index],
-                                );
-                              }
-                            },
-                          ),
-                  ),
-                ],
-              ),
-            ),
-          ),
+          ],
+        ),
+        actions: [
+          // Tombol Logout
+          IconButton(
+            icon: const Icon(Icons.logout, color: Colors.red),
+            onPressed: () async {
+              await Supabase.instance.client.auth.signOut();
+              if(mounted) context.go('/login'); // Sesuaikan rute login Anda
+            },
+          )
         ],
       ),
       
-      // Floating Action Button
+      body: RefreshIndicator(
+        onRefresh: _fetchData,
+        color: const Color(0xFFFF8C42),
+        child: Column(
+          children: [
+            // 1. HEADER (Banner + Card Info Resto)
+            _buildHeader(context, viewModel),
+
+            // 2. KONTEN (Tabs + List)
+            Expanded(
+              child: Container(
+                width: double.infinity,
+                decoration: const BoxDecoration(
+                  color: Color(0xFFffe3c9), // Background orange muda
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(30),
+                    topRight: Radius.circular(30),
+                  ),
+                ),
+                child: Column(
+                  children: [
+                    // TABS
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 20),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          _buildCategoryTab('PRE-ORDER'),
+                          const SizedBox(width: 40),
+                          _buildCategoryTab('MENU'),
+                        ],
+                      ),
+                    ),
+
+                    // LIST DATA
+                    Expanded(
+                      child: viewModel.isLoading
+                          ? const Center(child: CircularProgressIndicator(color: Color(0xFFFF8C42)))
+                          : dataList.isEmpty
+                              ? _buildEmptyState(isPreOrderTab)
+                              : ListView.separated(
+                                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 80),
+                                  itemCount: dataList.length,
+                                  separatorBuilder: (ctx, i) => const SizedBox(height: 12),
+                                  itemBuilder: (context, index) {
+                                    if (isPreOrderTab) {
+                                      // ITEM PRE-ORDER
+                                      final item = viewModel.preOrders[index];
+                                      return PreOrderItemCard(
+                                        preOrder: item,
+                                        onTap: () {
+                                          // Navigasi detail PO (Opsional)
+                                        },
+                                      );
+                                    } else {
+                                      // ITEM MENU
+                                      final item = viewModel.menus[index];
+                                      return MenuItemCard(
+                                        menu: item,
+                                        onEdit: () {
+                                          // Navigasi Edit Menu
+                                          context.go('/seller/home/menu-form', extra: item);
+                                        },
+                                      );
+                                    }
+                                  },
+                                ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+      
+      // FLOATING ACTION BUTTON (Add)
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          if (selectedCategory == 'PRE-ORDER') {
-            // Navigate to PO Form
-            context.go('/seller/home/add-preorder'); 
+          if (isPreOrderTab) {
+            context.go('/seller/home/add-preorder');
           } else {
-            // Navigate to Menu Form
+            // Mode Add New Menu
             context.go('/seller/home/menu-form', extra: null);
           }
         },
         backgroundColor: const Color(0xFFFF8C42),
-        child: const Icon(Icons.add, color: Colors.white),
+        elevation: 4,
+        child: const Icon(Icons.add, color: Colors.white, size: 28),
       ),
     );
   }
 
+  // --- WIDGET HEADER (Banner + Card Floating) ---
+  Widget _buildHeader(BuildContext context, PreOrderViewModel viewModel) {
+    return Stack(
+      children: [
+        // Background Banner
+        Container(
+          height: 240, 
+          width: double.infinity,
+          decoration: const BoxDecoration(
+            image: DecorationImage(
+              image: AssetImage('assets/images/banner.jpeg'), // Ganti NetworkImage jika ada
+              fit: BoxFit.cover,
+            ),
+          ),
+          child: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [Colors.transparent, Colors.black.withOpacity(0.7)],
+              ),
+            ),
+          ),
+        ),
+        
+        // Card Info Restoran (Floating)
+        Positioned(
+          bottom: 25,
+          left: 16,
+          right: 16,
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 10,
+                  offset: const Offset(0, 5),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                // Logo Toko Placeholder
+                Container(
+                  width: 50,
+                  height: 50,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFffe3c9),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(Icons.storefront, color: Color(0xFFFF8C42), size: 30),
+                ),
+                const SizedBox(width: 12),
+                
+                // Text Info
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        viewModel.currentRestaurant?.name ?? 'Memuat Toko...',
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black87,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        viewModel.currentRestaurant?.description ?? 'Kelola tokomu disini',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey[600],
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+
+                // Tombol Ganti
+                const SizedBox(width: 8),
+                InkWell(
+                  onTap: () => _showRestaurantSelector(context, viewModel),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[100],
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: Colors.grey.shade300),
+                    ),
+                    child: Row(
+                      children: const [
+                        Text(
+                          "Ganti",
+                          style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.black54),
+                        ),
+                        Icon(Icons.keyboard_arrow_down, size: 16, color: Colors.black54),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // --- WIDGET TAB KATEGORI ---
   Widget _buildCategoryTab(String category) {
     final isSelected = selectedCategory == category;
     return GestureDetector(
-      onTap: () {
-        setState(() {
-          selectedCategory = category;
-        });
-      },
-      child: Column(
-        children: [
-          Text(
-            category,
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-              color: const Color(0xFF593A1D),
-            ),
+      onTap: () => setState(() => selectedCategory = category),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? const Color(0xFF593A1D) : Colors.transparent,
+          borderRadius: BorderRadius.circular(20),
+          border: isSelected ? null : Border.all(color: const Color(0xFF593A1D), width: 1.5),
+        ),
+        child: Text(
+          category,
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.bold,
+            color: isSelected ? Colors.white : const Color(0xFF593A1D),
           ),
-          const SizedBox(height: 4),
-          if (isSelected)
-            Container(
-              height: 2,
-              width: 40,
-              color: const Color(0xFF593A1D),
-            ),
-        ],
+        ),
       ),
     );
   }
-}
 
-// Separate widget for product items
-class PreOrderItem extends StatelessWidget {
-  final PreOrderModel preOrder;
-
-  const PreOrderItem({
-    super.key,
-    required this.preOrder,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(12), // Increased padding slightly
-      decoration: BoxDecoration(
-        color: Colors.white, // Changed to white to pop against the orange bg
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
+  // --- WIDGET TAMPILAN KOSONG ---
+  Widget _buildEmptyState(bool isPreOrder) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Icon(
+          isPreOrder ? Icons.calendar_month_outlined : Icons.restaurant_menu,
+          size: 60,
+          color: Colors.brown.withOpacity(0.4),
+        ),
+        const SizedBox(height: 16),
+        Text(
+          isPreOrder ? "Belum ada jadwal PO" : "Belum ada Menu",
+          style: TextStyle(
+            color: Colors.brown.withOpacity(0.6),
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
           ),
-        ],
-      ),
-      child: Row(
-        children: [
-          // Icon Placeholder (Since PreOrderModel doesn't have an image url)
-          Container(
-            width: 60,
-            height: 60,
-            decoration: BoxDecoration(
-              color: Colors.orange.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: const Icon(Icons.calendar_month, color: Color(0xFFFF8C42)),
-          ),
-          const SizedBox(width: 12),
-
-          // PreOrder Details
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // 1. Name
-                Text(
-                  preOrder.name,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
-                  ),
-                ),
-                const SizedBox(height: 8),
-
-                // 2. Open Order Date & Time
-                Row(
-                  children: [
-                    const Icon(Icons.access_time, size: 14, color: Colors.green),
-                    const SizedBox(width: 4),
-                    Text(
-                      'Open: ${preOrder.orderDate ?? '-'} ${preOrder.orderTime ?? ''}',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey[700],
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 4),
-
-                // 3. Close Order Date & Time
-                Row(
-                  children: [
-                    const Icon(Icons.access_time_filled, size: 14, color: Colors.redAccent),
-                    const SizedBox(width: 4),
-                    Text(
-                      'Close: ${preOrder.closeOrderDate ?? '-'} ${preOrder.closeOrderTime ?? ''}',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey[700],
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class ProductItem extends StatelessWidget {
-  final MenuModel menu;
-
-  const ProductItem({
-    super.key,
-    required this.menu,
-  });
-
-  // Helper to format currency manually if you don't use the intl package
-  String _formatCurrency(int price) {
-    // Simple manual formatting. 
-    // Ideally use NumberFormat.currency from 'intl' package if available.
-    String priceStr = price.toString().replaceAllMapped(
-        RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]}.');
-    return 'Rp. $priceStr,00';
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(8),
-      decoration: BoxDecoration(
-        color: Colors.white, // Changed to white for better contrast
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        children: [
-          // Product Image
-          ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: Image.asset(
-              'assets/images/image1.png', // Hardcoded as requested
-              width: 70,
-              height: 70,
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) {
-                return Container(
-                  width: 70,
-                  height: 70,
-                  color: Colors.grey[300],
-                  child: const Icon(Icons.fastfood, color: Colors.grey),
-                );
-              },
-            ),
-          ),
-          const SizedBox(width: 12),
-
-          // Product Details
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Name
-                Text(
-                  menu.name,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                // Description
-                Text(
-                  menu.description ?? 'No description available',
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey[600],
-                  ),
-                ),
-                const SizedBox(height: 4),
-                // Price
-                Text(
-                  _formatCurrency(menu.price),
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.black87,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          "Tekan tombol + untuk menambahkan",
+          style: TextStyle(color: Colors.brown.withOpacity(0.4), fontSize: 12),
+        ),
+      ],
     );
   }
 }
