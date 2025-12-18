@@ -55,3 +55,7 @@ part 'seller_chat_list_page.dart';
 part 'chat_detail_page.dart';
 part 'checkout_page.dart';
 part 'buyer_payment.dart';
+part 'seller_add_pickup.dart';
+part 'broadcast_detail_page.dart';
+part 'seller_add_po.dart';
+>>>>>>> main

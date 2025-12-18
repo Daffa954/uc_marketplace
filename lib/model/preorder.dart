@@ -39,4 +39,24 @@ class PreOrderModel {
     'close_order_date': closeOrderDate,
     'close_order_time': closeOrderTime,
   };
+
+  PreOrderModel copyWith({
+    int? preOrderId,
+    int? restaurantId,
+    String? name,
+    String? orderDate,
+    String? orderTime,
+    String? closeOrderDate,
+    String? closeOrderTime,
+  }) {
+    return PreOrderModel(
+      preOrderId: preOrderId ?? this.preOrderId,
+      restaurantId: restaurantId ?? this.restaurantId,
+      name: name ?? this.name,
+      orderDate: orderDate ?? this.orderDate,
+      orderTime: orderTime ?? this.orderTime,
+      closeOrderDate: closeOrderDate ?? this.closeOrderDate,
+      closeOrderTime: closeOrderTime ?? this.closeOrderTime,
+    );
+  }
 }

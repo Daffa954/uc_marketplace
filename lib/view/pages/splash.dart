@@ -27,18 +27,18 @@ class _SplashScreenState extends State<SplashScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             // Ganti dengan Logo Aplikasi Anda
-            Icon(Icons.shopping_bag_outlined, size: 80, color: Colors.green),
+            Icon(Icons.shopping_bag_outlined, size: 80, color: MyApp.primaryOrange),
             const SizedBox(height: 20),
             const Text(
               "UC Marketplace",
               style: TextStyle(
                 fontSize: 24, 
                 fontWeight: FontWeight.bold,
-                color: Colors.green,
+                color: MyApp.primaryOrange,
               ),
             ),
             const SizedBox(height: 20),
-            const CircularProgressIndicator(color: Colors.green), // Indikator loading
+            const CircularProgressIndicator(color: MyApp.primaryOrange), // Indikator loading
           ],
         ),
       ),

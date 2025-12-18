@@ -9,38 +9,23 @@ class SellerDashboardPage extends StatefulWidget {
 
 class _SellerDashboardPageState extends State<SellerDashboardPage> {
 
-  String selectedCategory = 'ALL';
-  
-  final List<Map<String, dynamic>> products = [
-    {
-      'name': 'Burger',
-      'description': 'Food description - Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod...',
-      'price': 'Rp. 30.000,00',
-      'category': 'FOOD',
-    },
-    {
-      'name': 'Burger',
-      'description': 'Food description - Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod...',
-      'price': 'Rp. 30.000,00',
-      'category': 'FOOD',
-    },
-    {
-      'name': 'Burger',
-      'description': 'Food description - Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod...',
-      'price': 'Rp. 30.000,00',
-      'category': 'FOOD',
-    },
-  ];
+  String selectedCategory = 'PRE-ORDER'; 
 
-  List<Map<String, dynamic>> get filteredProducts {
-    if (selectedCategory == 'ALL') {
-      return products;
-    }
-    return products.where((p) => p['category'] == selectedCategory).toList();
+  @override
+  void initState() {
+    super.initState();
+    // 2. Fetch both PreOrders and Menus when page loads
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<PreOrderViewModel>().initSellerDashboard();
+    });
   }
 
   @override
   Widget build(BuildContext context) {
+    final viewModel = context.watch<PreOrderViewModel>();
+
+    final bool isPreOrderTab = selectedCategory == 'PRE-ORDER';
+
     return Scaffold(
       body: Column(
         children: [
@@ -63,8 +48,8 @@ class _SellerDashboardPageState extends State<SellerDashboardPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Business Name',
+                Text(
+                  viewModel.currentRestaurant?.name ?? 'No name available',
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
@@ -72,7 +57,7 @@ class _SellerDashboardPageState extends State<SellerDashboardPage> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Business Description - Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua...',
+                  viewModel.currentRestaurant?.description ?? 'No description available',
                   style: TextStyle(
                     fontSize: 14,
                     color: Colors.grey[700],
@@ -100,25 +85,36 @@ class _SellerDashboardPageState extends State<SellerDashboardPage> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
-                        _buildCategoryTab('ALL'),
-                        _buildCategoryTab('FOOD'),
-                        _buildCategoryTab('DESSERT'),
-                        _buildCategoryTab('DRINK'),
+                        _buildCategoryTab('PRE-ORDER'),
+                        _buildCategoryTab('MENU')
                       ],
                     ),
                   ),
                   
-                  // Product List
+                  // PreOrder List (Using ViewModel)
                   Expanded(
-                    child: ListView.builder(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      itemCount: filteredProducts.length,
-                      itemBuilder: (context, index) {
-                        return ProductItem(
-                          product: filteredProducts[index],
-                        );
-                      },
-                    ),
+                    child: viewModel.isLoading
+                        ? const Center(child: CircularProgressIndicator())
+                        : ListView.builder(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            // Check which list length to use
+                            itemCount: isPreOrderTab 
+                                ? viewModel.preOrders.length 
+                                : viewModel.menus.length,
+                            itemBuilder: (context, index) {
+                              if (isPreOrderTab) {
+                                // Show PreOrder Item
+                                return PreOrderItem(
+                                  preOrder: viewModel.preOrders[index],
+                                );
+                              } else {
+                                // Show Menu Item (ProductItem)
+                                return ProductItem(
+                                  menu: viewModel.menus[index],
+                                );
+                              }
+                            },
+                          ),
                   ),
                 ],
               ),
@@ -130,7 +126,13 @@ class _SellerDashboardPageState extends State<SellerDashboardPage> {
       // Floating Action Button
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          context.go('/seller/home/menu-form', extra: null);
+          if (selectedCategory == 'PRE-ORDER') {
+            // Navigate to PO Form
+            context.go('/seller/home/add-preorder'); 
+          } else {
+            // Navigate to Menu Form
+            context.go('/seller/home/menu-form', extra: null);
+          }
         },
         backgroundColor: const Color(0xFFFF8C42),
         child: const Icon(Icons.add, color: Colors.white),
@@ -170,13 +172,115 @@ class _SellerDashboardPageState extends State<SellerDashboardPage> {
 }
 
 // Separate widget for product items
+class PreOrderItem extends StatelessWidget {
+  final PreOrderModel preOrder;
+
+  const PreOrderItem({
+    super.key,
+    required this.preOrder,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(12), // Increased padding slightly
+      decoration: BoxDecoration(
+        color: Colors.white, // Changed to white to pop against the orange bg
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          // Icon Placeholder (Since PreOrderModel doesn't have an image url)
+          Container(
+            width: 60,
+            height: 60,
+            decoration: BoxDecoration(
+              color: Colors.orange.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: const Icon(Icons.calendar_month, color: Color(0xFFFF8C42)),
+          ),
+          const SizedBox(width: 12),
+
+          // PreOrder Details
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // 1. Name
+                Text(
+                  preOrder.name,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
+                const SizedBox(height: 8),
+
+                // 2. Open Order Date & Time
+                Row(
+                  children: [
+                    const Icon(Icons.access_time, size: 14, color: Colors.green),
+                    const SizedBox(width: 4),
+                    Text(
+                      'Open: ${preOrder.orderDate ?? '-'} ${preOrder.orderTime ?? ''}',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey[700],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+
+                // 3. Close Order Date & Time
+                Row(
+                  children: [
+                    const Icon(Icons.access_time_filled, size: 14, color: Colors.redAccent),
+                    const SizedBox(width: 4),
+                    Text(
+                      'Close: ${preOrder.closeOrderDate ?? '-'} ${preOrder.closeOrderTime ?? ''}',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey[700],
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class ProductItem extends StatelessWidget {
-  final Map<String, dynamic> product;
+  final MenuModel menu;
 
   const ProductItem({
     super.key,
-    required this.product,
+    required this.menu,
   });
+
+  // Helper to format currency manually if you don't use the intl package
+  String _formatCurrency(int price) {
+    // Simple manual formatting. 
+    // Ideally use NumberFormat.currency from 'intl' package if available.
+    String priceStr = price.toString().replaceAllMapped(
+        RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]}.');
+    return 'Rp. $priceStr,00';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -184,7 +288,7 @@ class ProductItem extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
-        color: const Color(0xFFffe3c9),
+        color: Colors.white, // Changed to white for better contrast
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
@@ -193,7 +297,7 @@ class ProductItem extends StatelessWidget {
           ClipRRect(
             borderRadius: BorderRadius.circular(8),
             child: Image.asset(
-              'assets/images/image1.png',
+              'assets/images/image1.png', // Hardcoded as requested
               width: 70,
               height: 70,
               fit: BoxFit.cover,
@@ -208,22 +312,24 @@ class ProductItem extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 12),
-          
+
           // Product Details
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Name
                 Text(
-                  product['name'],
+                  menu.name,
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
                 const SizedBox(height: 4),
+                // Description
                 Text(
-                  product['description'],
+                  menu.description ?? 'No description available',
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
@@ -232,8 +338,9 @@ class ProductItem extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 4),
+                // Price
                 Text(
-                  product['price'],
+                  _formatCurrency(menu.price),
                   style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
