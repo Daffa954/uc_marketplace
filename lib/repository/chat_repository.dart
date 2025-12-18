@@ -6,6 +6,7 @@ class ChatRepository {
 
   // Get chats for a specific seller
   Future<List<Map<String, dynamic>>> getSellerChats(int sellerId) async {
+    print("ChatRepository: Fetching chats for sellerId: $sellerId");
     try {
       // Fetch chats where seller_id matches
       // We also want to know the name of the buyer (user_id)
@@ -14,14 +15,17 @@ class ChatRepository {
           .select('*, users:user_id(name)')
           .eq('seller_id', sellerId);
 
+      print("ChatRepository: Raw response for sellerId $sellerId: $response");
       return List<Map<String, dynamic>>.from(response);
     } catch (e) {
+      print("ChatRepository: Error fetching chats: $e");
       throw Exception("Gagal mengambil data chat: $e");
     }
   }
 
   // Get messages for a specific chat room
   Future<List<MessageModel>> getMessages(int chatId) async {
+    print("ChatRepository: Fetching messages for chatId: $chatId");
     try {
       final response = await _supabase
           .from('messages')
@@ -32,8 +36,12 @@ class ChatRepository {
             ascending: true,
           ); // Assuming message_id is auto-increment or use created_at
 
+      print(
+        "ChatRepository: Raw messages response for chatId $chatId: $response",
+      );
       return (response as List).map((e) => MessageModel.fromJson(e)).toList();
     } catch (e) {
+      print("ChatRepository: Error fetching messages: $e");
       throw Exception("Gagal mengambil pesan: $e");
     }
   }
@@ -44,22 +52,60 @@ class ChatRepository {
     required int senderId,
     required String content,
   }) async {
+    print(
+      "ChatRepository: Sending message. ChatId: $chatId, SenderId: $senderId, Content: $content",
+    );
     try {
+      final now = DateTime.now();
+      final dateSend = now.toIso8601String().split('T')[0];
+      final timeSend =
+          "${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}:${now.second.toString().padLeft(2, '0')}";
+
       await _supabase.from('messages').insert({
         'chat_id': chatId,
         'sender_id': senderId,
         'content': content,
-        // 'date_send': ... // If DB requires manual date/time, add here.
-        // Usually Supabase handles created_at.
-        // If the table strictly requires date_send/time_send strings:
-        'date_send': DateTime.now().toIso8601String().split('T')[0],
-        'time_send': "${DateTime.now().hour}:${DateTime.now().minute}",
+        'date_send': dateSend,
+        'time_send': timeSend,
       });
+      print("ChatRepository: Message sent successfully");
     } catch (e) {
+      print("ChatRepository: Error sending message: $e");
       throw Exception("Gagal mengirim pesan: $e");
     }
   }
 
-  // Create a new chat room (if needed, e.g. when buyer starts chat)
-  // For seller feature, usually they just respond, but good to have.
+  // Create or get existing chat
+  Future<int> createChat({required int sellerId, required int userId}) async {
+    print(
+      "ChatRepository: Creating chat for sellerId: $sellerId, userId: $userId",
+    );
+    try {
+      // Check if chat exists
+      final existing = await _supabase
+          .from('chats')
+          .select()
+          .eq('seller_id', sellerId)
+          .eq('user_id', userId)
+          .maybeSingle();
+
+      if (existing != null) {
+        print("ChatRepository: Chat already exists: ${existing['payment_id']}");
+        return existing['payment_id'] ?? existing['chat_id'];
+      }
+
+      // Create new chat
+      final response = await _supabase
+          .from('chats')
+          .insert({'seller_id': sellerId, 'user_id': userId})
+          .select()
+          .single();
+
+      print("ChatRepository: Chat created: $response");
+      return response['payment_id'] ?? response['chat_id'];
+    } catch (e) {
+      print("ChatRepository: Error creating chat: $e");
+      throw Exception("Gagal membuat chat: $e");
+    }
+  }
 }

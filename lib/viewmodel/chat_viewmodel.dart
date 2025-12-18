@@ -23,21 +23,20 @@ class ChatViewModel with ChangeNotifier {
 
   // Fetch chats for the seller (logged in user)
   Future<void> fetchSellerChats(int userId) async {
+    print("ChatViewModel: fetchSellerChats called for userId: $userId");
     setLoading(true);
     try {
-      // 1. Get Restaurant ID for this user
-      final restaurant = await _restaurantRepo.getRestaurantByOwnerId(userId);
-      if (restaurant == null || restaurant.id == null) {
-        _chatList = [];
-        notifyListeners();
-        return;
-      }
+      // BYPASS: Use userId directly as sellerId
+      print(
+        "ChatViewModel: Bypassing restaurant check. Using userId $userId as sellerId.",
+      );
+      final chats = await _chatRepo.getSellerChats(userId);
 
-      // 2. Get Chats for this restaurant
-      final chats = await _chatRepo.getSellerChats(restaurant.id!);
+      print("ChatViewModel: Fetched ${chats.length} chats");
       _chatList = chats;
     } catch (e) {
       debugPrint("Error fetching seller chats: $e");
+      print("ChatViewModel: Error fetching seller chats: $e");
     } finally {
       setLoading(false);
     }
@@ -45,12 +44,15 @@ class ChatViewModel with ChangeNotifier {
 
   // Fetch messages for a specific chat room
   Future<void> fetchMessages(int chatId) async {
+    print("ChatViewModel: fetchMessages called for chatId: $chatId");
     setLoading(true);
     try {
       final msgs = await _chatRepo.getMessages(chatId);
+      print("ChatViewModel: Fetched ${msgs.length} messages");
       _messages = msgs;
     } catch (e) {
       debugPrint("Error fetching messages: $e");
+      print("ChatViewModel: Error fetching messages: $e");
     } finally {
       setLoading(false);
     }
@@ -64,6 +66,9 @@ class ChatViewModel with ChangeNotifier {
   }) async {
     if (content.trim().isEmpty) return;
 
+    print(
+      "ChatViewModel: sendMessage called. ChatId: $chatId, SenderId: $senderId",
+    );
     try {
       await _chatRepo.sendMessage(
         chatId: chatId,
@@ -74,7 +79,24 @@ class ChatViewModel with ChangeNotifier {
       await fetchMessages(chatId);
     } catch (e) {
       debugPrint("Error sending message: $e");
+      print("ChatViewModel: Error sending message: $e");
       rethrow;
+    }
+  }
+
+  // Create a new chat
+  Future<void> createChat(int sellerId, int userId) async {
+    setLoading(true);
+    try {
+      await _chatRepo.createChat(sellerId: sellerId, userId: userId);
+      // Refresh the list
+      await fetchSellerChats(sellerId);
+    } catch (e) {
+      debugPrint("Error creating chat: $e");
+      print("ChatViewModel: Error creating chat: $e");
+      rethrow;
+    } finally {
+      setLoading(false);
     }
   }
 }
