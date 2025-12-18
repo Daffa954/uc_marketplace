@@ -147,12 +147,6 @@ class MyApp extends StatelessWidget {
               PreOrderViewModel(authVM: authVM),
         ),
         ChangeNotifierProvider(create: (_) => BroadcastViewModel()),
-<<<<<<< Updated upstream
-        ChangeNotifierProvider(
-          create: (_) => ChatViewModel(),
-        ), // <--- Add ChatViewModel
-=======
->>>>>>> Stashed changes
         ChangeNotifierProxyProvider<AuthViewModel, OrderViewModel>(
           create: (context) => OrderViewModel(
             authVM: Provider.of<AuthViewModel>(context, listen: false),

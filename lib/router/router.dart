@@ -106,8 +106,6 @@ class AppRouter {
               ),
             ],
           ),
-<<<<<<< Updated upstream
-=======
           // Branch 2: Chat (NEW BRANCH ADDED HERE)
           StatefulShellBranch(
             routes: [
@@ -118,7 +116,6 @@ class AppRouter {
               ),
             ],
           ),
->>>>>>> Stashed changes
           StatefulShellBranch(
             routes: [
               GoRoute(
