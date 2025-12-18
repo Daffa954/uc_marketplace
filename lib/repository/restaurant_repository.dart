@@ -18,4 +18,20 @@ class RestaurantRepository {
       return null; // Return null jika tidak ketemu
     }
   }
+
+  // Fungsi untuk mengambil data restoran berdasarkan Owner ID (User ID)
+  Future<RestaurantModel?> getRestaurantByOwnerId(int ownerId) async {
+    try {
+      final data = await _supabase
+          .from('restaurants')
+          .select()
+          .eq('owners_id', ownerId)
+          .maybeSingle(); // Use maybeSingle in case user has no restaurant yet
+
+      if (data == null) return null;
+      return RestaurantModel.fromJson(data);
+    } catch (e) {
+      return null;
+    }
+  }
 }
