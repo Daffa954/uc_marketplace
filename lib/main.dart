@@ -139,17 +139,20 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => SearchViewModel()),
         ChangeNotifierProxyProvider<AuthViewModel, PreOrderViewModel>(
           create: (context) => PreOrderViewModel(
-            authVM: Provider.of<AuthViewModel>(context, listen: false)
+            authVM: Provider.of<AuthViewModel>(context, listen: false),
           ),
-          update: (context, authVM, previousOrderVM) => 
-            // Setiap kali AuthVM berubah (misal login/logout), 
-            // OrderVM mendapat instance AuthVM terbaru
-            PreOrderViewModel(authVM: authVM),
+          update: (context, authVM, previousOrderVM) =>
+              // Setiap kali AuthVM berubah (misal login/logout),
+              // OrderVM mendapat instance AuthVM terbaru
+              PreOrderViewModel(authVM: authVM),
         ),
         ChangeNotifierProvider(create: (_) => BroadcastViewModel()),
+<<<<<<< Updated upstream
         ChangeNotifierProvider(
           create: (_) => ChatViewModel(),
         ), // <--- Add ChatViewModel
+=======
+>>>>>>> Stashed changes
         ChangeNotifierProxyProvider<AuthViewModel, OrderViewModel>(
           create: (context) => OrderViewModel(
             authVM: Provider.of<AuthViewModel>(context, listen: false),
@@ -160,6 +163,7 @@ class MyApp extends StatelessWidget {
               OrderViewModel(authVM: authVM),
         ),
         ChangeNotifierProvider(create: (_) => PaymentViewModel()),
+        ChangeNotifierProvider(create: (_) => ChatViewModel()),
       ],
       child: MaterialApp.router(
         routerConfig: AppRouter.router, // Menggunakan Router yang sudah dipisah

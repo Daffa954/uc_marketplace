@@ -31,10 +31,14 @@ class ChatRepository {
           .from('messages')
           .select()
           .eq('chat_id', chatId)
+<<<<<<< Updated upstream
           .order(
             'message_id',
             ascending: true,
           ); // Assuming message_id is auto-increment or use created_at
+=======
+          .order('message_id', ascending: true);
+>>>>>>> Stashed changes
 
       print(
         "ChatRepository: Raw messages response for chatId $chatId: $response",

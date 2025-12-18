@@ -117,7 +117,11 @@ class _SellerChatListPageState extends State<SellerChatListPage> {
                 final chat = chatVM.chatList[index];
                 // chat['users'] is the joined user data (buyer)
                 final buyerName = chat['users'] != null
+<<<<<<< Updated upstream
                     ? chat['users']['name']
+=======
+                    ? (chat['users']['name'] ?? "Pelanggan")
+>>>>>>> Stashed changes
                     : "Pelanggan";
                 // Handle potential different ID column names (chat_id vs payment_id)
                 final chatId = chat['chat_id'] ?? chat['payment_id'];

@@ -106,6 +106,19 @@ class AppRouter {
               ),
             ],
           ),
+<<<<<<< Updated upstream
+=======
+          // Branch 2: Chat (NEW BRANCH ADDED HERE)
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/buyer/chat',
+                builder: (context, state) =>
+                    const BuyerChatPage(), // Link to buyer_chat.dart
+              ),
+            ],
+          ),
+>>>>>>> Stashed changes
           StatefulShellBranch(
             routes: [
               GoRoute(
@@ -193,6 +206,28 @@ class AppRouter {
                 path: '/seller/products',
                 builder: (context, state) =>
                     const Center(child: Text("Halaman Produk")),
+              ),
+            ],
+          ),
+          // Branch Chat
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/seller/chat',
+                builder: (context, state) => const SellerChatListPage(),
+                routes: [
+                  GoRoute(
+                    path: 'detail', // /seller/chat/detail
+                    parentNavigatorKey: rootNavigatorKey,
+                    builder: (context, state) {
+                      final extra = state.extra as Map<String, dynamic>;
+                      return ChatDetailPage(
+                        chatId: extra['chatId'],
+                        title: extra['title'],
+                      );
+                    },
+                  ),
+                ],
               ),
             ],
           ),
