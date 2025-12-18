@@ -206,28 +206,6 @@ class AppRouter {
               ),
             ],
           ),
-          // Branch Chat
-          StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: '/seller/chat',
-                builder: (context, state) => const SellerChatListPage(),
-                routes: [
-                  GoRoute(
-                    path: 'detail', // /seller/chat/detail
-                    parentNavigatorKey: rootNavigatorKey,
-                    builder: (context, state) {
-                      final extra = state.extra as Map<String, dynamic>;
-                      return ChatDetailPage(
-                        chatId: extra['chatId'],
-                        title: extra['title'],
-                      );
-                    },
-                  ),
-                ],
-              ),
-            ],
-          ),
           // Branch Settings
           StatefulShellBranch(
             routes: [
