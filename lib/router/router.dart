@@ -166,9 +166,9 @@ class AppRouter {
           StatefulShellBranch(
             routes: [
               GoRoute(
-                path: '/seller/products',
+                path: '/seller/chats',
                 builder: (context, state) =>
-                    const Center(child: Text("Halaman Produk")),
+                    const Center(child: Text("Chat")),
               ),
             ],
           ),

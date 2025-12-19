@@ -31,18 +31,19 @@ class PreOrderViewModel with ChangeNotifier {
 
   List<PoPickupModel> _pickupList = [];
   List<PoPickupModel> get pickupList => _pickupList;
-List<RestaurantModel> _ownedRestaurants = []; // List semua resto milik user
-List<RestaurantModel> get ownedRestaurants => _ownedRestaurants;
+  List<RestaurantModel> _ownedRestaurants = []; // List semua resto milik user
+  List<RestaurantModel> get ownedRestaurants => _ownedRestaurants;
 
-// Fungsi ganti resto
-Future<void> changeRestaurant(RestaurantModel newResto) async {
-  _currentRestaurant = newResto;
-  notifyListeners();
-  // Refresh data menu/po berdasarkan resto yang baru dipilih
-  await initSellerDashboard(); 
-}
+  // Fungsi ganti resto
+  Future<void> changeRestaurant(RestaurantModel newResto) async {
+    _currentRestaurant = newResto;
+    notifyListeners();
+    // Refresh data menu/po berdasarkan resto yang baru dipilih
+    await initSellerDashboard();
+  }
+
   // Constructor: Langsung ambil data PO saat ViewModel dibuat
-  PreOrderViewModel({required AuthViewModel authVM})  : _authVM = authVM;
+  PreOrderViewModel({required AuthViewModel authVM}) : _authVM = authVM;
 
   Future<void> initSellerDashboard() async {
     _isLoading = true;
@@ -50,7 +51,8 @@ Future<void> changeRestaurant(RestaurantModel newResto) async {
 
     try {
       // 1. Check if user is logged in
-      final userId = _authVM.currentUser?.userId; // Assuming userId is accessible
+      final userId =
+          _authVM.currentUser?.userId; // Assuming userId is accessible
       if (userId == null) {
         debugPrint("User not logged in");
         _isLoading = false;
@@ -59,18 +61,14 @@ Future<void> changeRestaurant(RestaurantModel newResto) async {
       }
 
       // 2. Fetch Restaurant AND WAIT until it finishes
-      await fetchRestaurant(); 
+      await fetchRestaurant();
 
       // 3. Only if restaurant exists, fetch the rest
       if (_currentRestaurant != null) {
-        // We can run these two in parallel to save time, 
+        // We can run these two in parallel to save time,
         // because we now have the restaurant ID
-        await Future.wait([
-          fetchPreOrders(),
-          fetchMenus(),
-        ]);
+        await Future.wait([fetchPreOrders(), fetchMenus()]);
       }
-      
     } catch (e) {
       debugPrint("Error initializing dashboard: $e");
     } finally {
@@ -85,7 +83,9 @@ Future<void> changeRestaurant(RestaurantModel newResto) async {
     notifyListeners();
 
     try {
-      _preOrders = await _repo.getPreOrdersByRestaurantId(_currentRestaurant!.id!);
+      _preOrders = await _repo.getPreOrdersByRestaurantId(
+        _currentRestaurant!.id!,
+      );
     } catch (e) {
       debugPrint("Error fetching POs: $e");
     } finally {
@@ -109,7 +109,6 @@ Future<void> changeRestaurant(RestaurantModel newResto) async {
 
       _selectedPOMenus = results[0] as List<MenuModel>;
       _pickupList = results[1] as List<PoPickupModel>; // Cast ke List
-      
     } catch (e) {
       debugPrint("Error: $e");
     } finally {
@@ -119,17 +118,20 @@ Future<void> changeRestaurant(RestaurantModel newResto) async {
   }
 
   // for creating PO pickup places
-  Future<bool> createPoPickupPlaces(int preOrderId, List<PoPickupModel> pickupPlaces) async {
+  Future<bool> createPoPickupPlaces(
+    int preOrderId,
+    List<PoPickupModel> pickupPlaces,
+  ) async {
     _isLoading = true;
     notifyListeners(); // 1. Tell UI to show loading spinner
 
     try {
       // 2. Execute the repository call
       await _repo.createPickupPlaces(preOrderId, pickupPlaces);
-      
+
       // 3. Refresh the data (this syncs your local _pickupList with the DB)
       await fetchMenusForPO(preOrderId);
-      
+
       return true; // Return success to the UI
     } catch (e) {
       debugPrint("Error creating PO pickup places: $e");
@@ -139,19 +141,23 @@ Future<void> changeRestaurant(RestaurantModel newResto) async {
       notifyListeners(); // 4. Tell UI to hide loading spinner
     }
   }
+
+  // Fetch Semua Menu
   // Fetch Semua Menu
   Future<void> fetchMenus() async {
     _isLoading = true;
     notifyListeners();
 
     try {
-      // Jalankan request secara paralel agar lebih cepat
-      final results = await Future.wait([
-        _menuRepo.getMenusByRestaurantId(_currentRestaurant!.id!)
-      ]);
+      // Pastikan restaurant id tidak null sebelum fetch
+      if (_currentRestaurant == null || _currentRestaurant!.id == null) {
+        debugPrint("Restaurant not selected or ID is null");
+        return;
+      }
 
-      _menus = results as List<MenuModel>;
-
+      // [PERBAIKAN] Panggil langsung tanpa Future.wait
+      _menus = await _menuRepo.getMenusByRestaurantId(_currentRestaurant!.id!);
+      
     } catch (e) {
       debugPrint("Error fetching menus: $e");
     } finally {
@@ -159,8 +165,8 @@ Future<void> changeRestaurant(RestaurantModel newResto) async {
       notifyListeners();
     }
   }
-
   // Fetch Restaurant (asumsi hanya ada satu restaurant)
+  // Fetch Restaurant
   Future<void> fetchRestaurant() async {
     _isLoading = true;
     notifyListeners();
@@ -168,12 +174,31 @@ Future<void> changeRestaurant(RestaurantModel newResto) async {
     try {
       final restaurants = await _restoRepo.getRestaurantsByOwner();
       _ownedRestaurants = restaurants;
-      _currentRestaurant = restaurants.isNotEmpty ? restaurants.first : null;
-      _isLoading = false;
+
+      if (restaurants.isEmpty) {
+        _currentRestaurant = null;
+      } else {
+        // [PERBAIKAN LOGIC]
+        if (_currentRestaurant == null) {
+          // 1. Jika belum ada yang dipilih (Awal Buka), pilih yang pertama
+          _currentRestaurant = restaurants.first;
+        } else {
+          // 2. Jika SUDAH ada yang dipilih (Ganti Resto / Refresh), 
+          // Coba cari restoran yang sedang dipilih di dalam list baru (untuk update data)
+          // Jika tidak ketemu (misal resto dihapus), baru fallback ke yang pertama
+          try {
+             _currentRestaurant = restaurants.firstWhere((r) => r.id == _currentRestaurant!.id);
+          } catch (e) {
+             _currentRestaurant = restaurants.first;
+          }
+        }
+      }
+      
     } catch (e) {
       debugPrint("Error fetching restaurant: $e");
     } finally {
-      _isLoading = false;
+      // Hapus _isLoading = false di sini karena initSellerDashboard akan lanjut loading data lain
+      // Biarkan initSellerDashboard yang mematikan loading di akhir flow
       notifyListeners();
     }
   }
@@ -189,13 +214,15 @@ Future<void> changeRestaurant(RestaurantModel newResto) async {
     try {
       // 1. Get Current Restaurant ID (Ensure _currentRestaurant is loaded)
       // If not loaded, you might need to fetch it or check auth
-      final restaurantId = _currentRestaurant?.id; 
+      final restaurantId = _currentRestaurant?.id;
       if (restaurantId == null) throw Exception("Restaurant not found");
 
       // 2. Create the PreOrder (Parent)
       // We assume the repository returns the created object WITH the new ID
-      final createdPO = await _repo.createPreOrder(preOrder.copyWith(restaurantId: restaurantId));
-      final newPoId = createdPO.preOrderId; 
+      final createdPO = await _repo.createPreOrder(
+        preOrder.copyWith(restaurantId: restaurantId),
+      );
+      final newPoId = createdPO.preOrderId;
 
       if (newPoId == null) throw Exception("Failed to get new PreOrder ID");
 
@@ -209,10 +236,7 @@ Future<void> changeRestaurant(RestaurantModel newResto) async {
 
       // 4. Create PreOrder Menus (Join Table)
       final menuFutures = menuIds.map((menuId) {
-        final poMenu = PreOrderMenuModel(
-          preOrderId: newPoId,
-          menuId: menuId,
-        );
+        final poMenu = PreOrderMenuModel(preOrderId: newPoId, menuId: menuId);
         return _repo.createPreOrderMenu(poMenu);
       }).toList();
 
@@ -220,10 +244,9 @@ Future<void> changeRestaurant(RestaurantModel newResto) async {
       await Future.wait([...pickupFutures, ...menuFutures]);
 
       // 5. Refresh List
-      await fetchPreOrders(); 
-      
-      return true;
+      await fetchPreOrders();
 
+      return true;
     } catch (e) {
       debugPrint("Error creating full PO: $e");
       return false;

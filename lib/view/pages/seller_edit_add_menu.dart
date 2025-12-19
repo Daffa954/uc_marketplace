@@ -67,10 +67,27 @@ class _AddEditMenuPageState extends State<AddEditMenuPage> {
   }
 
   Future<void> _handleSave() async {
+    // 1. VALIDASI RESTORAN (Ambil dari PreOrderViewModel)
+    // Kita akses viewmodel dashboard untuk tahu resto mana yang sedang aktif
+    final dashboardVM = context.read<PreOrderViewModel>();
+    final currentResto = dashboardVM.currentRestaurant;
+
+    // Cek apakah data restoran ada
+    if (currentResto == null || currentResto.id == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Error: Tidak ada restoran yang dipilih."), 
+          backgroundColor: Colors.red
+        )
+      );
+      return;
+    }
+
+    // 2. PROSES SIMPAN
     final vm = context.read<AddEditMenuViewModel>();
     
-    // TODO: Ganti dengan ID Seller asli dari User Session
-    int currentSellerRestoId = 1; 
+    // Ambil ID asli dari object currentResto
+    int currentSellerRestoId = currentResto.id!; 
 
     final String? error = await vm.saveMenu(
       isNewItem: _isNewItem,
@@ -79,20 +96,23 @@ class _AddEditMenuPageState extends State<AddEditMenuPage> {
       description: _descController.text,
       priceStr: _priceController.text,
       oldImageUrl: widget.item?.image,
-      type: _selectedType, // [BARU] Kirim tipe yang dipilih
-      restaurantId: currentSellerRestoId, 
+      type: _selectedType, 
+      restaurantId: currentSellerRestoId, // <--- ID SUDAH DINAMIS
     );
 
     if (!mounted) return;
 
     if (error == null) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Berhasil disimpan!")));
-      Navigator.pop(context, true);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Berhasil disimpan!"))
+      );
+      Navigator.pop(context, true); // Kembali ke dashboard & refresh
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error), backgroundColor: Colors.red));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error), backgroundColor: Colors.red)
+      );
     }
   }
-
   // ... (Fungsi _handleDelete tetap sama)
   Future<void> _handleDelete() async {
      // Gunakan logic delete sebelumnya...

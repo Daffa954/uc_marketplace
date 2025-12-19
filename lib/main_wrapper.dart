@@ -71,7 +71,7 @@ class SellerMainWrapper extends StatelessWidget {
             icon: Icon(Icons.dashboard),
             label: 'Dashboard',
           ),
-          BottomNavigationBarItem(icon: Icon(Icons.list_alt), label: 'Produk'),
+          BottomNavigationBarItem(icon: Icon(Icons.chat), label: 'Chat'),
           BottomNavigationBarItem(
             icon: Icon(Icons.settings),
             label: 'Pengaturan',
