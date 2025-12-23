@@ -1,6 +1,5 @@
-import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
-import 'package:uc_marketplace/model/model.dart';
+part of 'widgets.dart';
+
 
 class MenuDetailPage extends StatelessWidget {
   final MenuModel menu;

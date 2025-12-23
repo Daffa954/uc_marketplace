@@ -181,5 +181,44 @@ class PreOrderRepository {
       throw Exception("Failed to link Menu: $e");
     }
   }
+Future<List<PreOrderModel>> getClosingSoonPreOrders() async {
+    final now = DateTime.now().toIso8601String(); // Ambil waktu sekarang
+    
+    final response = await _supabase
+        .from('pre_orders')
+        .select()
+        .eq('status', 'OPEN')
+        .gte('close_order_date', now) // Hanya ambil yang belum lewat tanggal tutupnya
+        .order('close_order_date', ascending: true) // Yang paling cepat tutup di atas
+        .limit(5); // Ambil 5 saja
 
+    return (response as List).map((e) => PreOrderModel.fromJson(e)).toList();
+  }
+
+  // 2. Logic "Bantu Larisin" (Hidden Gems/Upscale)
+  // Ambil yang status OPEN, tapi current_quota masih sedikit (misal di bawah 5)
+  Future<List<PreOrderModel>> getHiddenGemsPreOrders() async {
+    final response = await _supabase
+        .from('pre_orders')
+        .select()
+        .eq('status', 'OPEN')
+        .lt('current_quota', 5) // Kurang dari 5 pesanan (Masih sepi)
+        .order('created_at', ascending: false) // Tetap yang terbaru
+        .limit(10);
+
+    return (response as List).map((e) => PreOrderModel.fromJson(e)).toList();
+  }
+  
+  // 3. Logic "Popular" (Yang paling laris)
+  Future<List<PreOrderModel>> getPopularPreOrders() async {
+    final response = await _supabase
+        .from('pre_orders')
+        .select()
+        .eq('status', 'OPEN')
+        .gt('current_quota', 5) // Yang sudah laku lebih dari 5
+        .order('current_quota', ascending: false) // Urutkan dari yang terbanyak
+        .limit(5);
+
+    return (response as List).map((e) => PreOrderModel.fromJson(e)).toList();
+  }
 }

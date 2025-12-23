@@ -18,10 +18,10 @@ class HomeBodyContent extends StatelessWidget {
 
     return RefreshIndicator(
       onRefresh: () => homeVM.fetchHomeData(),
-      color: const Color(0xFFFF7F27), 
+      color: const Color(0xFFFF7F27),
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(32.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -30,9 +30,11 @@ class HomeBodyContent extends StatelessWidget {
 
             const SizedBox(height: 20),
 
-            // --- Promo & Search ---
-            const PromoCarousel(),
+            const HeroSection(),
+
             const SizedBox(height: 20),
+
+            // --- Search Bar ---
             const SearchBarWidget(),
 
             const SizedBox(height: 24),
@@ -42,47 +44,44 @@ class HomeBodyContent extends StatelessWidget {
 
             const SizedBox(height: 24),
 
-            // --- SECTION 1: RESTORAN ---
+            // --- SECTION 1: PO Mau Tutup ---
             if (homeVM.isLoading)
-              const Center(
-                child: Padding(
-                  padding: EdgeInsets.all(20),
-                  child: CircularProgressIndicator(),
-                ),
-              )
+              const SizedBox.shrink()
             else if (homeVM.preOrders.isEmpty)
               const Center(child: Text("PO Tidak Tersedia"))
             else
-              PoSection(
-                title: "Pre Order Tersedia",
-                pre_orders: homeVM.preOrders,
-              ),
+              PoSection(title: "Segera Tutup", pre_orders: homeVM.preOrders),
 
             const SizedBox(height: 24),
 
-            // --- SECTION 2: POPULAR FOODS ---
+            // --- SECTION 2: PO Hidden Gem---
             if (homeVM.isLoading)
-              const SizedBox.shrink() 
-            else if (homeVM.menus.isEmpty)
-              const Center(child: Text("Belum ada menu populer."))
+              const SizedBox.shrink()
+            else if (homeVM.hiddenGemsPreOrders.isEmpty)
+              const Center(child: Text("Belum PO."))
             else
-              PopularSection(
-                title: "Popular Foods",
-                menus: homeVM.menus, // Kirim data dari ViewModel
+              PoSection(
+                title: "Bantu Larisin",
+                pre_orders: homeVM.hiddenGemsPreOrders,
               ),
 
             const SizedBox(height: 20),
 
-            // --- SECTION 3: NEW FOODS  ---
-            if (!homeVM.isLoading && homeVM.menus.isNotEmpty)
-              PopularSection(
-                title: "New Foods",
-                menus: homeVM.menus.reversed
-                    .toList(), // Contoh: dibalik urutannya
+            // --- SECTION 3: PO Populer  ---
+            if (homeVM.isLoading)
+              const SizedBox.shrink()
+            else if (homeVM.popularPreOrders.isEmpty)
+              const Center(child: Text("Belum PO."))
+            else
+              PoSection(
+                title: "Populer Pre Order",
+                pre_orders: homeVM.popularPreOrders,
               ),
 
             // Tambahan space bawah agar tidak tertutup bottom bar wrapper
-            const SizedBox(height: 80),
+            const SizedBox(height: 20),
+
+            const SizedBox(height: 40),
           ],
         ),
       ),

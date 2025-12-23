@@ -1,6 +1,4 @@
-import 'package:flutter/material.dart';
-import '../../main.dart'; // Import untuk akses warna utama (MyApp.primaryOrange, dll)
-
+part of 'widgets.dart';
 class PopularItemCard extends StatelessWidget {
   final String foodName;
   final String restaurantName;

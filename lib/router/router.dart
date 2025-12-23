@@ -3,7 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:uc_marketplace/main_wrapper.dart';
 import 'package:uc_marketplace/model/model.dart';
 import 'package:uc_marketplace/view/pages/pages.dart';
-import 'package:uc_marketplace/view/widgets/menu_detail_page.dart';
+import 'package:uc_marketplace/view/widgets/widgets.dart';
 
 class AppRouter {
   // Global Key untuk Navigator paling luar (untuk menutupi BottomBar)

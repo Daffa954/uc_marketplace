@@ -32,4 +32,18 @@ class HomeRepository {
       throw Exception('Gagal memuat menu: $e');
     }
   }
+  
+  Future<List<GeneralCategoryModel>> getCategories() async {
+    try {
+      // Mengambil semua data dari tabel general_categories
+      final response = await _supabase.from('general_categories').select();
+      
+      // Konversi JSON ke List Model
+      return (response as List)
+          .map((e) => GeneralCategoryModel.fromJson(e))
+          .toList();
+    } catch (e) {
+      throw Exception('Gagal mengambil kategori: $e');
+    }
+  }
 }

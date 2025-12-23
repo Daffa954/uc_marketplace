@@ -9,6 +9,11 @@ class PreOrderModel {
   final String? closeOrderDate;
   final String? closeOrderTime;
 
+// [BARU] Field Wajib Tambahan
+  final String status;        // 'OPEN', 'CLOSED', 'COMPLETED'
+  final int currentQuota;     // Jumlah yang sudah dipesan (misal: 2)
+  final int targetQuota;      // Target maksimal (misal: 20)
+  final String? image;        // URL Gambar Banner PO
   PreOrderModel({
     this.preOrderId,
     this.restaurantId,
@@ -17,6 +22,11 @@ class PreOrderModel {
     this.orderTime,
     this.closeOrderDate,
     this.closeOrderTime,
+    this.status = 'OPEN',
+    this.currentQuota = 0,
+    this.targetQuota = 0,
+    this.image,
+
   });
 
   factory PreOrderModel.fromJson(Map<String, dynamic> json) {
@@ -28,6 +38,11 @@ class PreOrderModel {
       orderTime: json['order_time'],
       closeOrderDate: json['close_order_date'],
       closeOrderTime: json['close_order_time'],
+      // [BARU] Mapping dari Database
+      status: json['status'] ?? 'OPEN',
+      currentQuota: json['current_quota'] ?? 0,
+      targetQuota: json['target_quota'] ?? 0,
+      image: json['image'], // Pastikan di DB tipe text/varchar
     );
   }
 
@@ -38,6 +53,11 @@ class PreOrderModel {
     'order_time': orderTime,
     'close_order_date': closeOrderDate,
     'close_order_time': closeOrderTime,
+
+    'status': status,
+    'current_quota': currentQuota,
+    'target_quota': targetQuota,
+    'image': image,
   };
 
   PreOrderModel copyWith({

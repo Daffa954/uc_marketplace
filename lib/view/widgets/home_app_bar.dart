@@ -1,8 +1,4 @@
-import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:uc_marketplace/main.dart';
-import 'package:uc_marketplace/viewmodel/auth_viewmodel.dart';
-
+part of 'widgets.dart';
 class HomeAppBar extends StatelessWidget {
   const HomeAppBar({super.key});
 

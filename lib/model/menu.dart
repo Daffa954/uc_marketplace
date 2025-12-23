@@ -10,7 +10,7 @@ class MenuModel {
   final String? image;
   final int price;
   final MenuType type;
-
+final int? generalCategoryId;
   MenuModel({
     this.menuId,
     this.preOrderMenuId,
@@ -20,6 +20,7 @@ class MenuModel {
     this.image,
     required this.price,
     required this.type,
+    this.generalCategoryId,
   });
 
   factory MenuModel.fromJson(Map<String, dynamic> json) {
@@ -32,6 +33,7 @@ class MenuModel {
       image: json['image'],
       price: json['price'] ?? 0,
       type: enumFromString(MenuType.values, json['type']),
+      generalCategoryId: json['general_category_id'],
     );
   }
 
@@ -42,5 +44,6 @@ class MenuModel {
     'image': image,
     'price': price,
     'type': type.toString().split('.').last,
+    'general_category_id': generalCategoryId,
   };
 }

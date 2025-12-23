@@ -1,7 +1,4 @@
-import 'package:flutter/material.dart';
-import 'package:uc_marketplace/model/model.dart';
-import 'package:uc_marketplace/view/widgets/food_cad.dart'; // Pastikan nama file benar (food_card.dart atau food_cad.dart)
-import 'package:uc_marketplace/view/widgets/section_header.dart';
+part of 'widgets.dart';
 
 class PopularSection extends StatelessWidget {
   final String title;
