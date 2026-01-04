@@ -4,6 +4,20 @@ import 'package:uc_marketplace/model/model.dart';
 class ChatRepository {
   final SupabaseClient _supabase = Supabase.instance.client;
 
+  // Get chats for a specific buyer
+  Future<List<Map<String, dynamic>>> getBuyerChats(int buyerId) async {
+    try {
+      final response = await _supabase
+          .from('chats')
+          .select('*, users:seller_id(name)')
+          .eq('user_id', buyerId);
+
+      return List<Map<String, dynamic>>.from(response);
+    } catch (e) {
+      throw Exception("Gagal mengambil data chat: $e");
+    }
+  }
+
   // Get chats for a specific seller
   Future<List<Map<String, dynamic>>> getSellerChats(int sellerId) async {
     print("ChatRepository: Fetching chats for sellerId: $sellerId");

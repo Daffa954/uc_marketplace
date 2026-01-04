@@ -111,8 +111,20 @@ class AppRouter {
             routes: [
               GoRoute(
                 path: '/buyer/chat',
-                builder: (context, state) =>
-                    const BuyerChatPage(), // Link to buyer_chat.dart
+                builder: (context, state) => const BuyerChatPage(),
+                routes: [
+                  GoRoute(
+                    path: 'detail', // Full path: /buyer/chat/detail
+                    parentNavigatorKey: rootNavigatorKey, // Covers the bottom bar
+                    builder: (context, state) {
+                      final extra = state.extra as Map<String, dynamic>;
+                      return ChatDetailPage(
+                        chatId: extra['chatId'],
+                        title: extra['title'],
+                      );
+                    },
+                  ),
+                ],
               ),
             ],
           ),

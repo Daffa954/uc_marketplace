@@ -42,6 +42,18 @@ class ChatViewModel with ChangeNotifier {
     }
   }
 
+  Future<void> fetchBuyerChats(int userId) async {
+    setLoading(true);
+    try {
+      final chats = await _chatRepo.getBuyerChats(userId);
+      _chatList = chats;
+    } catch (e) {
+      debugPrint("Error fetching buyer chats: $e");
+    } finally {
+      setLoading(false);
+    }
+  }
+
   // Fetch messages for a specific chat room
   Future<void> fetchMessages(int chatId) async {
     print("ChatViewModel: fetchMessages called for chatId: $chatId");
