@@ -4,11 +4,12 @@ import 'package:uc_marketplace/model/model.dart';
 class PreOrderCard extends StatelessWidget {
   final PreOrderModel preOrder;
   final VoidCallback? onTap;
-
+  final String? distanceInfo; // [BARU] Parameter jarak
   const PreOrderCard({
     super.key,
     required this.preOrder,
     this.onTap,
+    this.distanceInfo, // [BARU] Parameter jarak
   });
 
   @override
@@ -16,7 +17,9 @@ class PreOrderCard extends StatelessWidget {
     // Logic sederhana untuk Cek Status (Open/Close)
     bool isOpen = false;
     if (preOrder.closeOrderDate != null) {
-      final closeDate = DateTime.parse("${preOrder.closeOrderDate} ${preOrder.closeOrderTime ?? '00:00:00'}");
+      final closeDate = DateTime.parse(
+        "${preOrder.closeOrderDate} ${preOrder.closeOrderTime ?? '00:00:00'}",
+      );
       isOpen = DateTime.now().isBefore(closeDate);
     }
 
@@ -44,7 +47,9 @@ class PreOrderCard extends StatelessWidget {
             Stack(
               children: [
                 ClipRRect(
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(12),
+                  ),
                   child: Image.network(
                     "https://placehold.co/600x300/png?text=${Uri.encodeComponent(preOrder.name)}",
                     height: 120,
@@ -57,7 +62,10 @@ class PreOrderCard extends StatelessWidget {
                   top: 8,
                   right: 8,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: isOpen ? Colors.green : Colors.grey,
                       borderRadius: BorderRadius.circular(4),
@@ -93,7 +101,11 @@ class PreOrderCard extends StatelessWidget {
                   const SizedBox(height: 4),
                   Row(
                     children: [
-                      const Icon(Icons.calendar_today, size: 12, color: Colors.grey),
+                      const Icon(
+                        Icons.calendar_today,
+                        size: 12,
+                        color: Colors.grey,
+                      ),
                       const SizedBox(width: 4),
                       Text(
                         "Close: ${preOrder.closeOrderDate ?? '-'}",
@@ -102,16 +114,49 @@ class PreOrderCard extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 4),
-                   Row(
+                  Row(
                     children: [
-                      const Icon(Icons.access_time, size: 12, color: Colors.grey),
+                      const Icon(
+                        Icons.access_time,
+                        size: 12,
+                        color: Colors.grey,
+                      ),
                       const SizedBox(width: 4),
                       Text(
-                        "${preOrder.orderTime?.substring(0,5)} - ${preOrder.closeOrderTime?.substring(0,5)} WIB",
+                        "${preOrder.orderTime?.substring(0, 5)} - ${preOrder.closeOrderTime?.substring(0, 5)} WIB",
                         style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                       ),
                     ],
                   ),
+                  if (distanceInfo != null)
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.orange.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(
+                            Icons.location_on,
+                            size: 12,
+                            color: Colors.orange,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            distanceInfo!,
+                            style: const TextStyle(
+                              fontSize: 10,
+                              color: Colors.orange,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                 ],
               ),
             ),

@@ -13,6 +13,18 @@ class OrderModel {
   final String status; // 'PENDING', 'PAID', 'COMPLETED', 'CANCELLED'
   final String? createdAt; // Untuk history
 
+
+// --- [WAJIB TAMBAH UNTUK MIDTRANS] ---
+  final String? paymentUrl;  // Menyimpan Link Redirect Midtrans
+  final String? snapToken;   // Menyimpan Token Transaksi Midtrans
+  
+  // --- [WAJIB TAMBAH UNTUK PENGIRIMAN] ---
+  // Midtrans butuh rincian ini agar user tidak bingung totalnya dari mana
+  final String deliveryMethod; // 'PICKUP' atau 'DELIVERY'
+  final int shippingCost;      // Biaya Ongkir
+  final String? shippingAddress; // Alamat User (Dikirim ke Midtrans sebagai Customer Detail)
+  final String? shippingCourier; // JNE/POS/GOSEND (Untuk record)
+
   OrderModel({
     this.orderId,
     this.userId,
@@ -23,6 +35,13 @@ class OrderModel {
     this.items,
     this.status = 'PENDING',
     this.createdAt,
+    this.paymentUrl,
+    this.snapToken,
+    this.deliveryMethod = 'PICKUP',
+    this.shippingCost = 0,
+    this.shippingAddress,
+    this.shippingCourier,
+
   });
 
   factory OrderModel.fromJson(Map<String, dynamic> json) {
@@ -39,6 +58,12 @@ class OrderModel {
       items: json['order_items'] != null 
           ? (json['order_items'] as List).map((i) => OrderItemModel.fromJson(i)).toList()
           : null,
+          paymentUrl: json['payment_url'],
+      snapToken: json['snap_token'],
+      deliveryMethod: json['delivery_method'] ?? 'PICKUP',
+      shippingCost: json['shipping_cost'] ?? 0,
+      shippingAddress: json['shipping_address'],
+      shippingCourier: json['shipping_courier'],
     );
   }
 
@@ -50,5 +75,12 @@ class OrderModel {
     'note': note,
     'status': status,
     'created_at': createdAt,
+    'payment_url': paymentUrl,
+    'snap_token': snapToken,
+    'delivery_method': deliveryMethod,
+    'shipping_cost': shippingCost,
+    'shipping_address': shippingAddress,
+    'shipping_courier': shippingCourier,
+
   };
 }

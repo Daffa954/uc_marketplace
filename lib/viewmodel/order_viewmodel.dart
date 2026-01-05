@@ -64,6 +64,7 @@ class OrderViewModel with ChangeNotifier {
         total: totalPrice.toInt(),
         note: finalNote,
         poPickupId: pickupLocation!.poPickupId ?? 0,
+        createdAt: DateTime.now().toIso8601String(), 
         // status: 'Pending' // Jika ada field status default
       );
 

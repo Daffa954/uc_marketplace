@@ -82,7 +82,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
   void _processPayment() async {
     // 1. Panggil ViewModel
     final orderVM = Provider.of<OrderViewModel>(context, listen: false);
-
+final int finalTotal = _uiTotalPrice.toInt();
     final int? newOrderId = await orderVM.submitOrder(
       preOrderId: widget.preOrder.preOrderId!,
       cartItems: _cartItems,
@@ -111,15 +111,24 @@ class _CheckoutPageState extends State<CheckoutPage> {
           actions: [
             TextButton(
               onPressed: () {
-                Navigator.pop(ctx);
+                Navigator.pop(ctx); // Tutup Dialog
 
+                // [PERBAIKAN UTAMA DISINI]
+                // Kita harus menyusun object OrderModel manual untuk dikirim ke PaymentPage
+                // agar state.extra di AppRouter tidak null.
+                
+                final newOrder = OrderModel(
+                  orderId: newOrderId,
+                  total: finalTotal, // Pastikan tipe data int
+                  status: 'PENDING', // Default status awal
+                  // Field lain bisa dikosongkan/null jika tidak dipakai di PaymentPage
+                );
+
+                // Navigasi menggunakan 'extra'
                 context.pushReplacementNamed(
                   'payment',
                   pathParameters: {'orderId': newOrderId.toString()},
-                  queryParameters: {
-                    'total': _uiTotalPrice.toString(),
-                    'resto': (widget.preOrder.restaurantId ?? 0).toString(),
-                  },
+                  extra: newOrder, // <--- KIRIM OBJECT DISINI
                 );
               },
               child: const Text("Bayar Sekarang"),

@@ -53,7 +53,79 @@ class HomeBodyContent extends StatelessWidget {
               PoSection(title: "Segera Tutup", pre_orders: homeVM.preOrders),
 
             const SizedBox(height: 24),
+            // --- SECTION: DEKAT SAYA (NEAR ME) ---
+            // Logika: Tampilkan list jika ada data, Tampilkan pesan jika kosong
+            if (homeVM.nearbyPOs.isNotEmpty) ...[
+              // KONDISI 1: ADA DATA
+              PoSection(
+                title: "Dekat Lokasi Kamu 📍",
+                pre_orders: homeVM.nearbyPOs,
+                extraInfoMap: homeVM.poDistances,
+              ),
+            ] else ...[
+              // KONDISI 2: DATA KOSONG (Tampilkan Keterangan)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Tetap tampilkan Judul agar user tahu fitur ini ada
+                    const Text(
+                      "Dekat Lokasi Kamu 📍",
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
 
+                    // Card Keterangan Kosong
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 24,
+                        horizontal: 16,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[50], // Warna abu sangat muda
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.grey.shade200),
+                      ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.location_off_outlined,
+                            size: 40,
+                            color: Colors.grey[400],
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            "Yah, belum ada PO di sekitarmu",
+                            style: TextStyle(
+                              color: Colors.grey[600],
+                              fontWeight: FontWeight.w600,
+                              fontSize: 14,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            "Coba aktifkan GPS atau cari di area lain ya!",
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: Colors.grey[500],
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+
+            const SizedBox(height: 24),
             // --- SECTION 2: PO Hidden Gem---
             if (homeVM.isLoading)
               const SizedBox.shrink()

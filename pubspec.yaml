@@ -48,6 +48,8 @@ dependencies:
   midtrans_snap: ^1.0.1
   provider: ^6.1.5+1
   supabase_flutter: ^2.10.3
+  webview_flutter: ^4.4.2  # Pastikan ini ada
+  qr_flutter: ^4.1.0  # WAJIB: Untuk mengubah string jadi gambar QR
 
 dev_dependencies:
   flutter_lints: ^5.0.0

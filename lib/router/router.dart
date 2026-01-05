@@ -37,6 +37,12 @@ class AppRouter {
                 builder: (context, state) => const HomeBuyer(),
                 routes: [
                   GoRoute(
+                    path: 'search',
+                    builder: (context, state) {
+                      return SearchPage();
+                    },
+                  ),
+                  GoRoute(
                     path: 'po-detail',
                     builder: (context, state) {
                       final po = state.extra as PreOrderModel;
@@ -45,7 +51,7 @@ class AppRouter {
                   ),
                   GoRoute(
                     path:
-                        'menu-detail', // Path lengkap: /buyer/home/menu-detail
+                        'menu-detail',
                     parentNavigatorKey: rootNavigatorKey, // Tutup bottom bar
                     builder: (context, state) {
                       final menu = state.extra as MenuModel;
@@ -77,31 +83,36 @@ class AppRouter {
                     },
                   ),
                   GoRoute(
-                    path: 'payment/:orderId', // orderId jadi bagian URL
-                    name: 'payment',
+                    path: 'payment/:orderId', // URL pattern
+                    name: 'payment', // Nama route untuk dipanggil
+                    parentNavigatorKey:
+                        rootNavigatorKey, // <--- TAMBAHKAN INI (Agar Full Screen & Tutup Bottom Bar)
                     builder: (context, state) {
-                      return PaymentPage(
-                        // Ambil dari URL path
-                        orderId: int.parse(state.pathParameters['orderId']!),
-                        // Ambil dari ?query=...
-                        totalAmount: double.parse(
-                          state.uri.queryParameters['total']!,
-                        ),
-                        restaurantId: int.parse(
-                          state.uri.queryParameters['resto']!,
-                        ),
-                      );
+                      // Validasi agar tidak crash jika extra null (misal refresh browser)
+                      if (state.extra == null) {
+                        return const Scaffold(
+                          body: Center(
+                            child: Text("Data Order Tidak Ditemukan"),
+                          ),
+                        );
+                      }
+
+                      // Casting object yang dikirim
+                      final orderObj = state.extra as OrderModel;
+
+                      return PaymentPage(order: orderObj);
                     },
                   ),
                 ],
               ),
+
             ],
           ),
           StatefulShellBranch(
             routes: [
               GoRoute(
-                path: '/buyer/search',
-                builder: (context, state) => const SearchPage(),
+                path: '/buyer/history',
+                builder: (context, state) => const HistoryOrderPage(),
               ),
             ],
           ),
@@ -167,8 +178,7 @@ class AppRouter {
             routes: [
               GoRoute(
                 path: '/seller/chats',
-                builder: (context, state) =>
-                    const Center(child: Text("Chat")),
+                builder: (context, state) => const Center(child: Text("Chat")),
               ),
             ],
           ),

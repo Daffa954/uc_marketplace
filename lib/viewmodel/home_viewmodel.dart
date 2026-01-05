@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:uc_marketplace/model/model.dart';
 import 'package:uc_marketplace/repository/home_repository.dart';
 import 'package:uc_marketplace/repository/po_repository.dart';
@@ -35,7 +36,6 @@ class HomeViewModel with ChangeNotifier {
   List<PreOrderModel> _popularPreOrders = [];
   List<PreOrderModel> get popularPreOrders => _popularPreOrders;
 
-
   // State Loading & Error
   bool _isLoading = false;
   bool get isLoading => _isLoading;
@@ -44,6 +44,17 @@ class HomeViewModel with ChangeNotifier {
   int _selectedCategoryId = 0;
   int get selectedCategoryId => _selectedCategoryId;
   // Constructor langsung panggil fetch data
+
+  // [BARU] State untuk PO Dekat Saya
+  List<PreOrderModel> _nearbyPOs = [];
+  List<PreOrderModel> get nearbyPOs => _nearbyPOs;
+
+  // Menyimpan jarak untuk ditampilkan di UI (misal: "1.2 km")
+  Map<int, String> _poDistances = {};
+  Map<int, String> get poDistances => _poDistances;
+
+  bool _isLocationPermissionGranted = false;
+
   HomeViewModel() {
     fetchHomeData();
   }
@@ -74,11 +85,98 @@ class HomeViewModel with ChangeNotifier {
       _closingSoonPreOrders = results[5] as List<PreOrderModel>; // [BARU]
       _hiddenGemsPreOrders = results[6] as List<PreOrderModel>; // [BARU]
       _popularPreOrders = results[7] as List<PreOrderModel>; // [BARU]
+
+      await _fetchNearbyPOs();
     } catch (e) {
       _errorMessage = e.toString();
     } finally {
       _isLoading = false;
       notifyListeners();
+    }
+  }
+
+  Future<void> _fetchNearbyPOs() async {
+    try {
+      // A. Cek Permission & Ambil Lokasi
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) return;
+
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) return;
+      }
+
+      if (permission == LocationPermission.deniedForever) return;
+
+      _isLocationPermissionGranted = true;
+
+      // Ambil posisi user saat ini
+      Position userPosition = await Geolocator.getCurrentPosition();
+
+      // B. Ambil Data PO Raw (yang ada data pickup-nya)
+      final rawData = await _poRepo.getActivePreOrdersWithLocation();
+
+      List<Map<String, dynamic>> processedList = [];
+
+      // C. Hitung Jarak
+      for (var item in rawData) {
+        // Convert ke Model
+        final po = PreOrderModel.fromJson(item);
+
+        // Cek Pickup Points di dalam PO ini
+        // Asumsi response supabse: item['po_pickups'] adalah List
+        List pickups = item['po_pickups'] ?? [];
+
+        if (pickups.isEmpty) continue; // Skip kalau gak ada lokasi pickup
+
+        double minDistance = double.infinity;
+
+        // Cari pickup point terdekat dari user untuk PO ini
+        for (var p in pickups) {
+          double? lat = (p['altitude'] as num?)
+              ?.toDouble(); // Ingat mapping latitude Anda 'altitude'
+          double? long = (p['longitude'] as num?)?.toDouble();
+
+          if (lat != null && long != null) {
+            double dist = Geolocator.distanceBetween(
+              userPosition.latitude,
+              userPosition.longitude,
+              lat,
+              long,
+            );
+            if (dist < minDistance) minDistance = dist;
+          }
+        }
+
+        // Simpan PO ini jika jaraknya valid (misal radius max 20km)
+        if (minDistance != double.infinity && minDistance < 20000) {
+          processedList.add({'po': po, 'distance_meter': minDistance});
+        }
+      }
+
+      // D. Urutkan (Terdekat ke Terjauh)
+      processedList.sort(
+        (a, b) => (a['distance_meter'] as double).compareTo(
+          b['distance_meter'] as double,
+        ),
+      );
+
+      // E. Simpan ke State
+      _nearbyPOs = processedList
+          .map((e) => e['po'] as PreOrderModel)
+          .take(5)
+          .toList();
+
+      // Simpan format teks jaraknya (biar gampang dipanggil di UI)
+      _poDistances = {};
+      for (var item in processedList) {
+        final po = item['po'] as PreOrderModel;
+        final dist = item['distance_meter'] as double;
+        _poDistances[po.preOrderId!] = "${(dist / 1000).toStringAsFixed(1)} km";
+      }
+    } catch (e) {
+      debugPrint("Error fetching nearby: $e");
     }
   }
 

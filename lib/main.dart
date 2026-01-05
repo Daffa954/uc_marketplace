@@ -96,6 +96,7 @@ import 'package:uc_marketplace/router/router.dart';
 import 'package:uc_marketplace/viewmodel/addEditMenu_viewmodel.dart';
 import 'package:uc_marketplace/viewmodel/auth_viewmodel.dart';
 import 'package:uc_marketplace/viewmodel/broadcast_viewmodel.dart';
+import 'package:uc_marketplace/viewmodel/history_viewmodel.dart';
 import 'package:uc_marketplace/viewmodel/home_viewmodel.dart';
 import 'package:uc_marketplace/viewmodel/order_viewmodel.dart';
 import 'package:uc_marketplace/viewmodel/payment_viewmodel.dart';
@@ -139,25 +140,26 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => SearchViewModel()),
         ChangeNotifierProxyProvider<AuthViewModel, PreOrderViewModel>(
           create: (context) => PreOrderViewModel(
-            authVM: Provider.of<AuthViewModel>(context, listen: false)
+            authVM: Provider.of<AuthViewModel>(context, listen: false),
           ),
-          update: (context, authVM, previousOrderVM) => 
-            // Setiap kali AuthVM berubah (misal login/logout), 
-            // OrderVM mendapat instance AuthVM terbaru
-            PreOrderViewModel(authVM: authVM),
+          update: (context, authVM, previousOrderVM) =>
+              // Setiap kali AuthVM berubah (misal login/logout),
+              // OrderVM mendapat instance AuthVM terbaru
+              PreOrderViewModel(authVM: authVM),
         ),
         ChangeNotifierProvider(create: (_) => BroadcastViewModel()),
-       ChangeNotifierProxyProvider<AuthViewModel, OrderViewModel>(
+        ChangeNotifierProxyProvider<AuthViewModel, OrderViewModel>(
           create: (context) => OrderViewModel(
-            authVM: Provider.of<AuthViewModel>(context, listen: false)
+            authVM: Provider.of<AuthViewModel>(context, listen: false),
           ),
-          update: (context, authVM, previousOrderVM) => 
-            // Setiap kali AuthVM berubah (misal login/logout), 
-            // OrderVM mendapat instance AuthVM terbaru
-            OrderViewModel(authVM: authVM),
+          update: (context, authVM, previousOrderVM) =>
+              // Setiap kali AuthVM berubah (misal login/logout),
+              // OrderVM mendapat instance AuthVM terbaru
+              OrderViewModel(authVM: authVM),
         ),
         ChangeNotifierProvider(create: (_) => PaymentViewModel()),
         ChangeNotifierProvider(create: (_) => AddEditMenuViewModel()),
+        ChangeNotifierProvider(create: (_) => HistoryViewModel()),
       ],
       child: MaterialApp.router(
         routerConfig: AppRouter.router, // Menggunakan Router yang sudah dipisah

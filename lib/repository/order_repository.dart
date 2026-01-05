@@ -53,4 +53,28 @@ class OrderRepository {
       throw Exception("Repository Error: $e");
     }
   }
+
+  Future<List<OrderModel>> fetchOrdersByAuthId(String authUuid) async {
+    try {
+      final response = await _supabase
+          .from('orders')
+          .select('''
+            *,
+            order_items (
+              *,
+              menus (name, image)
+            ),
+            users!inner ( auth_id ) 
+          ''')
+          // [KUNCI RAHASIANYA DISINI]
+          // Kita filter berdasarkan kolom 'auth_id' milik tabel 'users' yang di-join
+          .eq('users.auth_id', authUuid) 
+          .order('created_at', ascending: false);
+
+      final List<dynamic> data = response;
+      return data.map((json) => OrderModel.fromJson(json)).toList();
+    } catch (e) {
+      throw Exception('Gagal mengambil history: $e');
+    }
+  }
 }

@@ -114,16 +114,15 @@ class PreOrderRepository {
     }
   }
 
-  Future<List<PreOrderModel>> getPreOrdersByRestaurantId(int restaurantId) async {
+  Future<List<PreOrderModel>> getPreOrdersByRestaurantId(
+    int restaurantId,
+  ) async {
     try {
       final data = await _supabase
           .from('pre_orders')
           .select()
           .eq('restaurant_id', restaurantId) // Filter: Column Name, Value
-          .order(
-            'close_order_date',
-            ascending: true,
-          ); 
+          .order('close_order_date', ascending: true);
 
       return (data as List).map((e) => PreOrderModel.fromJson(e)).toList();
     } catch (e) {
@@ -136,7 +135,7 @@ class PreOrderRepository {
       final data = preOrder.toJson();
       // Remove ID so Supabase generates it
       data.remove('pre_orders_id');
-      data.remove('preOrderId'); 
+      data.remove('preOrderId');
 
       final res = await _supabase
           .from('pre_orders')
@@ -181,15 +180,22 @@ class PreOrderRepository {
       throw Exception("Failed to link Menu: $e");
     }
   }
-Future<List<PreOrderModel>> getClosingSoonPreOrders() async {
+
+  Future<List<PreOrderModel>> getClosingSoonPreOrders() async {
     final now = DateTime.now().toIso8601String(); // Ambil waktu sekarang
-    
+
     final response = await _supabase
         .from('pre_orders')
         .select()
         .eq('status', 'OPEN')
-        .gte('close_order_date', now) // Hanya ambil yang belum lewat tanggal tutupnya
-        .order('close_order_date', ascending: true) // Yang paling cepat tutup di atas
+        .gte(
+          'close_order_date',
+          now,
+        ) // Hanya ambil yang belum lewat tanggal tutupnya
+        .order(
+          'close_order_date',
+          ascending: true,
+        ) // Yang paling cepat tutup di atas
         .limit(5); // Ambil 5 saja
 
     return (response as List).map((e) => PreOrderModel.fromJson(e)).toList();
@@ -208,7 +214,7 @@ Future<List<PreOrderModel>> getClosingSoonPreOrders() async {
 
     return (response as List).map((e) => PreOrderModel.fromJson(e)).toList();
   }
-  
+
   // 3. Logic "Popular" (Yang paling laris)
   Future<List<PreOrderModel>> getPopularPreOrders() async {
     final response = await _supabase
@@ -220,5 +226,19 @@ Future<List<PreOrderModel>> getClosingSoonPreOrders() async {
         .limit(5);
 
     return (response as List).map((e) => PreOrderModel.fromJson(e)).toList();
+  }
+
+  // Ambil PO yang OPEN beserta data Pickup-nya (untuk ambil latitude/longitude)
+  Future<List<Map<String, dynamic>>> getActivePreOrdersWithLocation() async {
+    // Kita perlu join manual atau select nested
+    // Asumsi: Kita ambil PO yang OPEN, lalu nanti di loop ambil pickup-nya
+    // Atau gunakan select nested Supabase:
+
+    final response = await _supabase
+        .from('pre_orders')
+        .select('*, po_pickups(*)') // Select PO beserta detail pickup-nya
+        .eq('status', 'OPEN');
+
+    return List<Map<String, dynamic>>.from(response);
   }
 }

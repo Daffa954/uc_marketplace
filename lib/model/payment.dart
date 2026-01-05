@@ -7,7 +7,7 @@ class PaymentModel {
   final DateTime? paidAt;
   final PaymentMethod? method;
   final PaymentStatus status;
-  final String? paymentProof; // [BARU] Untuk menyimpan URL gambar
+  final String? paymentProof; 
 
   PaymentModel({
     this.paymentId,
