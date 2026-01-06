@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:uc_marketplace/main.dart';
 import 'package:uc_marketplace/viewmodel/auth_viewmodel.dart';
 
 class HomeAppBar extends StatelessWidget {

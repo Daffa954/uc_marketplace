@@ -100,6 +100,7 @@ import 'package:uc_marketplace/viewmodel/order_viewmodel.dart';
 import 'package:uc_marketplace/viewmodel/payment_viewmodel.dart';
 import 'package:uc_marketplace/viewmodel/pre_order_viewmodel.dart';
 import 'package:uc_marketplace/viewmodel/search_viewmodel.dart';
+import 'package:uc_marketplace/viewmodel/new_order_history_viewmodel.dart';
 
 import 'shared/shared.dart'; // Import Router Anda
 
@@ -136,6 +137,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => AuthViewModel()),
         ChangeNotifierProvider(create: (_) => HomeViewModel()),
         ChangeNotifierProvider(create: (_) => SearchViewModel()),
+        ChangeNotifierProvider(create: (_) => AuthViewModel()),
         ChangeNotifierProxyProvider<AuthViewModel, PreOrderViewModel>(
           create: (context) => PreOrderViewModel(
             authVM: Provider.of<AuthViewModel>(context, listen: false)
@@ -145,6 +147,12 @@ class MyApp extends StatelessWidget {
             // OrderVM mendapat instance AuthVM terbaru
             PreOrderViewModel(authVM: authVM),
         ),
+         ChangeNotifierProxyProvider<AuthViewModel, NewOrderHistoryViewModel>(
+    create: (context) => NewOrderHistoryViewModel(
+      authVM: Provider.of<AuthViewModel>(context, listen: false),
+    ),
+    update: (context, authVM, historyVM) => NewOrderHistoryViewModel(authVM: authVM),
+  ),
         ChangeNotifierProvider(create: (_) => BroadcastViewModel()),
        ChangeNotifierProxyProvider<AuthViewModel, OrderViewModel>(
           create: (context) => OrderViewModel(
@@ -156,7 +164,8 @@ class MyApp extends StatelessWidget {
             OrderViewModel(authVM: authVM),
         ),
         ChangeNotifierProvider(create: (_) => PaymentViewModel()),
-      ],
+],
+      
       child: MaterialApp.router(
         routerConfig: AppRouter.router, // Menggunakan Router yang sudah dipisah
         debugShowCheckedModeBanner: false,
@@ -172,6 +181,7 @@ class MyApp extends StatelessWidget {
           ),
         ),
       ),
+      
     );
   }
 }

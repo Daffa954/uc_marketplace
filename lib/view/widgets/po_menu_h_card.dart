@@ -56,7 +56,7 @@ class PreOrderMenuHorizontalCard extends StatelessWidget {
                   children: [
                     // Nama Menu
                     Text(
-                      menu.name + "id po menu : " + menu.preOrderMenuId.toString(),
+                      "${menu.name}id po menu : ${menu.preOrderMenuId}",
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
