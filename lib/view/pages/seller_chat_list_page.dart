@@ -25,72 +25,6 @@ class _SellerChatListPageState extends State<SellerChatListPage> {
     });
   }
 
-  void _showAddChatDialog(BuildContext context, ChatViewModel chatVM) {
-    final userIdController = TextEditingController();
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text("Mulai Chat Baru"),
-        content: TextField(
-          controller: userIdController,
-          decoration: const InputDecoration(
-            labelText: "User ID Pelanggan",
-            hintText: "Masukkan ID User",
-          ),
-          keyboardType: TextInputType.number,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text("Batal"),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              final userIdStr = userIdController.text.trim();
-              if (userIdStr.isEmpty) return;
-
-              final userId = int.tryParse(userIdStr);
-              if (userId == null) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text("ID User harus angka")),
-                );
-                return;
-              }
-
-              final currentUser = Provider.of<AuthViewModel>(
-                context,
-                listen: false,
-              ).currentUser;
-              if (currentUser == null || currentUser.userId == null) return;
-
-              try {
-                // Using currentUser.userId as sellerId based on previous bypass
-                await chatVM.createChat(currentUser.userId!, userId);
-                if (context.mounted) {
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text("Chat berhasil dibuat")),
-                  );
-                }
-              } catch (e) {
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text("Gagal membuat chat: $e")),
-                  );
-                }
-              }
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFFF7F27),
-              foregroundColor: Colors.white,
-            ),
-            child: const Text("Tambah"),
-          ),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final chatVM = Provider.of<ChatViewModel>(context);
@@ -101,11 +35,6 @@ class _SellerChatListPageState extends State<SellerChatListPage> {
         backgroundColor: Colors.white,
         foregroundColor: Colors.black,
         elevation: 0,
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _showAddChatDialog(context, chatVM),
-        backgroundColor: const Color(0xFFFF7F27),
-        child: const Icon(Icons.add, color: Colors.white),
       ),
       body: chatVM.isLoading
           ? const Center(child: CircularProgressIndicator())

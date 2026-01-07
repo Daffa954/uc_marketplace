@@ -328,55 +328,87 @@ class _SearchPageState extends State<SearchPage> {
     );
   }
 
-  // --- CARD 1: UNTUK PRE-ORDER (Text Search) ---
+// --- CARD 1: UNTUK PRE-ORDER (Text Search) ---
   Widget _buildPreOrderCard(PreOrderModel item) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(color: Colors.grey.withOpacity(0.1), spreadRadius: 2, blurRadius: 8, offset: const Offset(0, 4)),
-        ],
-      ),
-      child: Row(
-        children: [
-          ClipRRect(
-            borderRadius: const BorderRadius.only(topLeft: Radius.circular(16), bottomLeft: Radius.circular(16)),
-            child: Image.network(
-              "https://placehold.co/200x200/png?text=${Uri.encodeComponent(item.name)}",
-              width: 100, height: 100, fit: BoxFit.cover,
+    return GestureDetector(
+      onTap: () {
+        // Navigasi ke detail PO dengan mengirim data model 'item'
+        context.push('/buyer/home/po-detail', extra: item);
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.withOpacity(0.1),
+              spreadRadius: 2,
+              blurRadius: 8,
+              offset: const Offset(0, 4),
             ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 12.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      const Icon(Icons.star, color: Colors.amber, size: 16),
-                      const SizedBox(width: 4),
-                      const Text("4.5", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  Text(item.name, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                  Text("PO Date: ${item.orderDate}", style: const TextStyle(fontSize: 12, color: Colors.grey), maxLines: 1, overflow: TextOverflow.ellipsis),
-                  Text("Time: ${item.orderTime ?? '-'}", style: const TextStyle(fontSize: 12, color: Colors.blue)),
-                ],
+          ],
+        ),
+        child: Row(
+          children: [
+            // Image Section
+            ClipRRect(
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(16),
+                bottomLeft: Radius.circular(16),
+              ),
+              child: Image.network(
+                "https://placehold.co/200x200/png?text=${Uri.encodeComponent(item.name)}",
+                width: 100,
+                height: 100,
+                fit: BoxFit.cover,
               ),
             ),
-          ),
-          const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
-          const SizedBox(width: 16),
-        ],
+            const SizedBox(width: 12),
+            // Content Section
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 12.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Row(
+                      children: [
+                        Icon(Icons.star, color: Colors.amber, size: 16),
+                        SizedBox(width: 4),
+                        Text("4.5",
+                            style: TextStyle(
+                                fontWeight: FontWeight.bold, fontSize: 12)),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      item.name,
+                      style: const TextStyle(
+                          fontSize: 16, fontWeight: FontWeight.bold),
+                    ),
+                    Text(
+                      "PO Date: ${item.orderDate}",
+                      style: const TextStyle(fontSize: 12, color: Colors.grey),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    Text(
+                      "Time: ${item.orderTime ?? '-'}",
+                      style: const TextStyle(fontSize: 12, color: Colors.blue),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
+            const SizedBox(width: 16),
+          ],
+        ),
       ),
     );
   }
 
-  // --- CARD 2: UNTUK PO PICKUP (Location Search) ---
+// --- CARD 2: UNTUK PO PICKUP (Location Search) ---
   // Tampilan dibuat IDENTIK dengan _buildPreOrderCard
   Widget _buildPickupCard(PoPickupModel item) {
     // Ambil foto pertama jika ada
@@ -384,53 +416,95 @@ class _SearchPageState extends State<SearchPage> {
         ? item.photoLocation!.first
         : "https://placehold.co/200x200/png?text=Pickup";
 
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(color: Colors.grey.withOpacity(0.1), spreadRadius: 2, blurRadius: 8, offset: const Offset(0, 4)),
-        ],
-      ),
-      child: Row(
-        children: [
-          ClipRRect(
-            borderRadius: const BorderRadius.only(topLeft: Radius.circular(16), bottomLeft: Radius.circular(16)),
-            child: Image.network(
-              imageUrl,
-              width: 100, height: 100, fit: BoxFit.cover,
-              errorBuilder: (ctx, err, stack) => Container(width: 100, height: 100, color: Colors.grey[200], child: const Icon(Icons.location_on)),
+    return GestureDetector(
+      onTap: () {
+        // NOTE: Pastikan Anda memiliki objek PreOrderModel yang terkait dengan item ini.
+        // Jika route /po-detail memerlukan PreOrderModel, Anda mungkin perlu 
+        // mengambilnya dari ViewModel berdasarkan item.preOrderId.
+        // context.push('/buyer/home/po-detail', extra: associatedPreOrder);
+        
+        print("Tapped on Pickup Point #${item.preOrderId}");
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.withOpacity(0.1),
+              spreadRadius: 2,
+              blurRadius: 8,
+              offset: const Offset(0, 4),
             ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 12.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      // Ganti icon Star jadi Map/Time tapi layout tetap sama
-                      const Icon(Icons.map, color: Colors.orange, size: 16),
-                      const SizedBox(width: 4),
-                      Text("Pickup Point", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Colors.orange)),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  // Nama dibuat dari ID atau nama lokasi jika ada
-                  Text("Point #${item.preOrderId}", style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                  // Alamat
-                  Text(item.address ?? "Lokasi Jemputan", style: const TextStyle(fontSize: 12, color: Colors.grey), maxLines: 1, overflow: TextOverflow.ellipsis),
-                  // Waktu Pickup
-                  Text("${item.startTime} - ${item.endTime}", style: const TextStyle(fontSize: 12, color: Colors.blue)),
-                ],
+          ],
+        ),
+        child: Row(
+          children: [
+            ClipRRect(
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(16),
+                bottomLeft: Radius.circular(16),
+              ),
+              child: Image.network(
+                imageUrl,
+                width: 100,
+                height: 100,
+                fit: BoxFit.cover,
+                errorBuilder: (ctx, err, stack) => Container(
+                  width: 100,
+                  height: 100,
+                  color: Colors.grey[200],
+                  child: const Icon(Icons.location_on),
+                ),
               ),
             ),
-          ),
-          const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
-          const SizedBox(width: 16),
-        ],
+            const SizedBox(width: 12),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 12.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Row(
+                      children: [
+                        Icon(Icons.map, color: Colors.orange, size: 16),
+                        SizedBox(width: 4),
+                        Text(
+                          "Pickup Point",
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                            color: Colors.orange,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      "Point #${item.preOrderId}",
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Text(
+                      item.address ?? "Lokasi Jemputan",
+                      style: const TextStyle(fontSize: 12, color: Colors.grey),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    Text(
+                      "${item.startTime} - ${item.endTime}",
+                      style: const TextStyle(fontSize: 12, color: Colors.blue),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
+            const SizedBox(width: 16),
+          ],
+        ),
       ),
     );
   }
