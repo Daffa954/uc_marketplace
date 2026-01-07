@@ -78,6 +78,8 @@ class PreOrderModel {
       orderTime: orderTime ?? this.orderTime,
       closeOrderDate: closeOrderDate ?? this.closeOrderDate,
       closeOrderTime: closeOrderTime ?? this.closeOrderTime,
+      image: image ?? this.image,
+
     );
   }
 }

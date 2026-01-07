@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import 'package:uc_marketplace/main_wrapper.dart';
 import 'package:uc_marketplace/model/model.dart';
 import 'package:uc_marketplace/view/pages/pages.dart';
+import 'package:uc_marketplace/view/pages/seller_menu_detail_page.dart';
+import 'package:uc_marketplace/view/pages/seller_po_detail_page.dart';
 import 'package:uc_marketplace/view/widgets/widgets.dart';
+import 'package:uc_marketplace/viewmodel/detail_viewmodel.dart';
 
 class AppRouter {
   // Global Key untuk Navigator paling luar (untuk menutupi BottomBar)
@@ -159,6 +163,29 @@ class AppRouter {
                 path: '/seller/home',
                 builder: (context, state) => const SellerDashboardPage(),
                 routes: [
+                  GoRoute(
+                    path: 'po-detail',
+                    parentNavigatorKey: rootNavigatorKey, // Menutupi Bottom Bar
+                    builder: (context, state) {
+                      final po = state.extra as PreOrderModel;
+                      // Bungkus dengan Provider agar DetailViewModel tersedia
+                      return ChangeNotifierProvider(
+                        create: (_) => DetailViewModel(),
+                        child: PreOrderDetailPageD(preOrder: po),
+                      );
+                    },
+                  ),
+
+                  // ROUTE: Menu Detail
+                  GoRoute(
+                    path: 'menu-detail',
+                    parentNavigatorKey: rootNavigatorKey, // Menutupi Bottom Bar
+                    builder: (context, state) {
+                      final menu = state.extra as MenuModel;
+                      // MenuDetailPage sudah punya Provider di dalamnya (sesuai kode sebelumnya)
+                      return MenuDetailPageD(menu: menu);
+                    },
+                  ),
                   // Halaman Detail yang menutupi Bottom Bar
                   GoRoute(
                     path: 'add-preorder',

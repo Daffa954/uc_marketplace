@@ -13,7 +13,11 @@ class PreOrderViewModel with ChangeNotifier {
   final _menuRepo = MenuRepository();
   final _restoRepo = RestaurantRepository();
   AuthViewModel _authVM;
+int _todayOrders = 0;
+  int get todayOrders => _todayOrders;
 
+  double _todayRevenue = 0.0;
+  double get todayRevenue => _todayRevenue;
   // --- STATE ---
   RestaurantModel? _currentRestaurant;
   RestaurantModel? get currentRestaurant => _currentRestaurant;
@@ -287,12 +291,18 @@ class PreOrderViewModel with ChangeNotifier {
     }
   }
 
+  // --- UPDATE FUNGSI INI ---
   Future<void> _fetchSalesChartData(int restaurantId) async {
     try {
       final rawData = await _repo.getWeeklySalesData(restaurantId);
 
       List<double> tempSales = List.filled(7, 0.0);
       double tempTotal = 0;
+      
+      // Reset Data Hari Ini
+      int tempTodayOrders = 0;
+      double tempTodayRevenue = 0;
+      final now = DateTime.now();
 
       for (var item in rawData) {
         final dateStr = item['order_date'] as String;
@@ -301,22 +311,38 @@ class PreOrderViewModel with ChangeNotifier {
         final date = DateTime.parse(dateStr).toLocal();
         final dayIndex = date.weekday - 1; // 0=Senin, 6=Minggu
 
+        // 1. Masukkan ke Grafik Mingguan
         if (dayIndex >= 0 && dayIndex < 7) {
           tempSales[dayIndex] += amount;
         }
-
+        
+        // 2. Hitung Total Mingguan
         tempTotal += amount;
+
+        // 3. [BARU] Cek apakah transaksi terjadi HARI INI
+        if (date.year == now.year && date.month == now.month && date.day == now.day) {
+          tempTodayOrders += 1;
+          tempTodayRevenue += amount;
+        }
       }
 
       _weeklySales = tempSales;
       _totalRevenue = tempTotal;
+      
+      // Update State Hari Ini
+      _todayOrders = tempTodayOrders;
+      _todayRevenue = tempTodayRevenue;
 
-      debugPrint("Chart Data Updated: $_weeklySales");
-      debugPrint("Total Revenue: $_totalRevenue");
+      // debugPrint("Today: $_todayOrders orders, Rp $_todayRevenue");
     } catch (e) {
       debugPrint("Error processing chart data: $e");
+      // Reset semua jika error
       _weeklySales = List.filled(7, 0.0);
       _totalRevenue = 0;
+      _todayOrders = 0;
+      _todayRevenue = 0;
     }
   }
+
+  
 }
