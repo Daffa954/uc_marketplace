@@ -86,6 +86,23 @@ class ChatRepository {
     }
   }
 
+  // Helper: Get integer User ID from UUID Auth ID
+  Future<int?> getUserIdByAuthId(String authUUID) async {
+    try {
+      final response = await _supabase
+          .from('users')
+          .select('user_id')
+          .eq('auth_id', authUUID)
+          .maybeSingle();
+
+      if (response == null) return null;
+      return response['user_id'] as int;
+    } catch (e) {
+      print("ChatRepository: Error fetching user ID: $e");
+      return null;
+    }
+  }
+
   // Create or get existing chat
   Future<int> createChat({required int sellerId, required int userId}) async {
     print(

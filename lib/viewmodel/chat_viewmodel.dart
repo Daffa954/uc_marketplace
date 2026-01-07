@@ -111,4 +111,30 @@ class ChatViewModel with ChangeNotifier {
       setLoading(false);
     }
   }
+
+  // New method for Buyer to start chat with a Seller (via Restaurant Owner UUID)
+  Future<int> createChatWithSeller(String sellerAuthUUID, int buyerId) async {
+    setLoading(true);
+    try {
+      // 1. Resolve seller's integer ID
+      final sellerId = await _chatRepo.getUserIdByAuthId(sellerAuthUUID);
+      if (sellerId == null) {
+        throw Exception("Seller user not found for UUID: $sellerAuthUUID");
+      }
+
+      // 2. Create or Get Chat
+      final chatId = await _chatRepo.createChat(
+        sellerId: sellerId,
+        userId: buyerId,
+      );
+
+      // 3. Return chatId so UI can navigate
+      return chatId;
+    } catch (e) {
+      print("ChatViewModel: Error creating chat with seller: $e");
+      rethrow;
+    } finally {
+      setLoading(false);
+    }
+  }
 }

@@ -1,6 +1,5 @@
 part of 'widgets.dart';
 
-
 class MenuDetailPage extends StatelessWidget {
   final MenuModel menu;
 
@@ -14,17 +13,20 @@ class MenuDetailPage extends StatelessWidget {
         children: [
           // Gambar Full
           Positioned(
-            top: 0, left: 0, right: 0,
+            top: 0,
+            left: 0,
+            right: 0,
             height: 350,
             child: Image.network(
               menu.image ?? "https://placehold.co/600x600",
               fit: BoxFit.cover,
             ),
           ),
-          
+
           // Tombol Back
           Positioned(
-            top: 50, left: 16,
+            top: 50,
+            left: 16,
             child: CircleAvatar(
               backgroundColor: Colors.white,
               child: IconButton(
@@ -53,34 +55,53 @@ class MenuDetailPage extends StatelessWidget {
                       Expanded(
                         child: Text(
                           menu.name,
-                          style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                          style: const TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                       Text(
                         "Rp ${menu.price}",
-                        style: const TextStyle(fontSize: 20, color: Color(0xFFFF7F27), fontWeight: FontWeight.bold),
+                        style: const TextStyle(
+                          fontSize: 20,
+                          color: Color(0xFFFF7F27),
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 8),
-                  
+
                   // Tipe Tag
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(color: Colors.grey[200], borderRadius: BorderRadius.circular(8)),
-                    child: Text(menu.type.toString().split('.').last, style: const TextStyle(color: Colors.grey)),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[200],
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      menu.type.toString().split('.').last,
+                      style: const TextStyle(color: Colors.grey),
+                    ),
                   ),
-                  
+
                   const SizedBox(height: 24),
-                  const Text("Deskripsi", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                  const Text(
+                    "Deskripsi",
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  ),
                   const SizedBox(height: 8),
                   Text(
                     menu.description ?? "Tidak ada deskripsi.",
                     style: const TextStyle(color: Colors.grey, height: 1.5),
                   ),
-                  
+
                   const Spacer(),
-                  
+
                   // Tombol Tambah ke Keranjang
                   SizedBox(
                     width: double.infinity,
@@ -89,9 +110,14 @@ class MenuDetailPage extends StatelessWidget {
                       onPressed: () {},
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFFFF7F27),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
-                      child: const Text("Tambah ke Keranjang", style: TextStyle(color: Colors.white, fontSize: 16)),
+                      child: const Text(
+                        "Tambah ke Keranjang",
+                        style: TextStyle(color: Colors.white, fontSize: 16),
+                      ),
                     ),
                   ),
                   const SizedBox(height: 20),

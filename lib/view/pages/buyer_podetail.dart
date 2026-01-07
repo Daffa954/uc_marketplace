@@ -355,6 +355,91 @@ class _PreOrderDetailPageState extends State<PreOrderDetailPage> {
             ),
           ),
 
+          // --- 2b. TOMBOL CHAT (BUYER TO SELLER) ---
+          Positioned(
+            top: 50,
+            right: 16,
+            child: CircleAvatar(
+              backgroundColor: Colors.white,
+              child: IconButton(
+                icon: const Icon(
+                  Icons.chat_bubble_outline,
+                  color: Color(0xFFFF7F27),
+                ),
+                onPressed: () async {
+                  final currentUser = Provider.of<AuthViewModel>(
+                    context,
+                    listen: false,
+                  ).currentUser;
+                  if (currentUser == null) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text("Silakan login terlebih dahulu"),
+                      ),
+                    );
+                    return;
+                  }
+
+                  if (widget.preOrder.restaurantId == null) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text("Info restoran tidak tersedia"),
+                      ),
+                    );
+                    return;
+                  }
+
+                  try {
+                    // 1. Get Restaurant to find OwnerId
+                    final restaurantRepo = RestaurantRepository();
+                    final restaurant = await restaurantRepo.getRestaurantById(
+                      widget.preOrder.restaurantId!,
+                    );
+
+                    if (restaurant == null || restaurant.ownerId == null) {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text("Gagal memuat info toko"),
+                          ),
+                        );
+                      }
+                      return;
+                    }
+
+                    // 2. Create Chat via ViewModel
+                    if (context.mounted) {
+                      final chatVM = Provider.of<ChatViewModel>(
+                        context,
+                        listen: false,
+                      );
+                      // Gunakan method 'createChatWithSeller' yang sudah dibuat
+                      // Logic: Resolve Owner UUID -> Owner Int ID (via RPC/Query) -> Create/Get Chat Room
+                      final chatId = await chatVM.createChatWithSeller(
+                        restaurant.ownerId!, // UUID seller
+                        currentUser.userId!, // Int buyer
+                      );
+
+                      // 3. Navigate to Chat Detail
+                      if (context.mounted) {
+                        context.push(
+                          '/buyer/chat/detail',
+                          extra: {'chatId': chatId, 'title': restaurant.name},
+                        );
+                      }
+                    }
+                  } catch (e) {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text("Gagal memulai chat: $e")),
+                      );
+                    }
+                  }
+                },
+              ),
+            ),
+          ),
+
           // --- 3. BOTTOM CART CARD ---
           if (_totalItems > 0)
             Positioned(

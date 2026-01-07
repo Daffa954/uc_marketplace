@@ -138,25 +138,6 @@ class AppRouter {
             routes: [
               GoRoute(
                 path: '/buyer/chat',
-                builder: (context, state) => const HistoryOrderPage(),
-              ),
-            ],
-          ),
-          // Branch 2: Chat (NEW BRANCH ADDED HERE)
-          StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: '/buyer/chat',
-                builder: (context, state) =>
-                    const BuyerChatPage(), // Link to buyer_chat.dart
-              ),
-            ],
-          ),
-          // Branch 2: Chat (NEW BRANCH ADDED HERE)
-          StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: '/buyer/chat',
                 builder: (context, state) => const BuyerChatPage(),
                 routes: [
                   GoRoute(
