@@ -124,6 +124,15 @@ class AppRouter {
               ),
             ],
           ),
+          // Branch 2: Chat (NEW BRANCH ADDED HERE)
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/buyer/chat',
+                builder: (context, state) => const BuyerChatPage(), // Link to buyer_chat.dart
+              ),
+            ],
+          ),
           StatefulShellBranch(
             routes: [
               GoRoute(
