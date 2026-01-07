@@ -137,6 +137,28 @@ class AppRouter {
               ),
             ],
           ),
+          // Branch 2: Chat (NEW BRANCH ADDED HERE)
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/buyer/chat',
+                builder: (context, state) => const BuyerChatPage(),
+                routes: [
+                  GoRoute(
+                    path: 'detail', // Full path: /buyer/chat/detail
+                    parentNavigatorKey: rootNavigatorKey, // Covers the bottom bar
+                    builder: (context, state) {
+                      final extra = state.extra as Map<String, dynamic>;
+                      return ChatDetailPage(
+                        chatId: extra['chatId'],
+                        title: extra['title'],
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ],
+          ),
           StatefulShellBranch(
             routes: [
               GoRoute(
@@ -211,6 +233,28 @@ class AppRouter {
                     parentNavigatorKey: rootNavigatorKey, // Pakai key static
                     builder: (context, state) {
                       return AddEditMenuPage();
+                    },
+                  ),
+                ],
+              ),
+            ],
+          ),
+          // Branch Chat
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/seller/chat',
+                builder: (context, state) => const SellerChatListPage(),
+                routes: [
+                  GoRoute(
+                    path: 'detail',
+                    parentNavigatorKey: rootNavigatorKey,
+                    builder: (context, state) {
+                      final extra = state.extra as Map<String, dynamic>;
+                      return ChatDetailPage(
+                        chatId: extra['chatId'],
+                        title: extra['title'],
+                      );
                     },
                   ),
                 ],

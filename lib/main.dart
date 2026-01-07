@@ -7,6 +7,7 @@ import 'package:uc_marketplace/viewmodel/addEditMenu_viewmodel.dart';
 import 'package:uc_marketplace/viewmodel/auth_viewmodel.dart';
 import 'package:uc_marketplace/viewmodel/broadcast_viewmodel.dart';
 import 'package:uc_marketplace/viewmodel/history_viewmodel.dart';
+import 'package:uc_marketplace/viewmodel/chat_viewmodel.dart';
 import 'package:uc_marketplace/viewmodel/home_viewmodel.dart';
 import 'package:uc_marketplace/viewmodel/order_viewmodel.dart';
 import 'package:uc_marketplace/viewmodel/payment_viewmodel.dart';
@@ -76,6 +77,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => PaymentViewModel()),
         ChangeNotifierProvider(create: (_) => AddEditMenuViewModel()),
         ChangeNotifierProvider(create: (_) => HistoryViewModel()),
+        ChangeNotifierProvider(create: (_) => ChatViewModel()),
       ],
       child: MaterialApp.router(
         routerConfig: AppRouter.router, // Menggunakan Router yang sudah dipisah

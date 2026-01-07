@@ -9,13 +9,19 @@ class BuyerChatPage extends StatefulWidget {
 
 class _BuyerChatPageState extends State<BuyerChatPage> {
   @override
-  void initState() {
-    super.initState();
-    // Memanggil data broadcast saat halaman pertama kali dibuka
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<BroadcastViewModel>(context, listen: false).fetchBroadcasts();
-    });
-  }
+    void initState() {
+      super.initState();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        // Fetch broadcasts (existing)
+        Provider.of<BroadcastViewModel>(context, listen: false).fetchBroadcasts();
+        
+        // Fetch personal chats for the buyer
+        final user = Provider.of<AuthViewModel>(context, listen: false).currentUser;
+        if (user != null && user.userId != null) {
+          Provider.of<ChatViewModel>(context, listen: false).fetchBuyerChats(user.userId!);
+        }
+      });
+    }
 
   @override
   Widget build(BuildContext context) {
@@ -91,25 +97,54 @@ class _BuyerChatPageState extends State<BuyerChatPage> {
         body: TabBarView(
           children: [
             // ------------------------------------------------
-            // TAB 1: PERSONAL CHAT (Manual / Dummy List)
+            // TAB 1: PERSONAL CHAT (Functional via ChatViewModel)
             // ------------------------------------------------
-            ListView.builder(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              itemCount: chatData.length,
-              itemBuilder: (context, index) {
-                final chat = chatData[index];
-                return _buildChatCard(
-                  context: context,
-                  name: chat["name"]!,
-                  message: chat["message"]!,
-                  date: chat["date"]!,
-                  isBroadcast: false,
-                  // Personal chat belum ada halaman detailnya di kode ini
-                  onTap: () {}, 
+            Consumer<ChatViewModel>(
+              builder: (context, chatVM, child) {
+                // 1. Handle Loading State
+                if (chatVM.isLoading) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+
+                // 2. Handle Empty State
+                if (chatVM.chatList.isEmpty) {
+                  return const Center(
+                    child: Text("Belum ada pesan dari penjual."),
+                  );
+                }
+
+                // 3. Render Dynamic List
+                return ListView.builder(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  itemCount: chatVM.chatList.length,
+                  itemBuilder: (context, index) {
+                    final chat = chatVM.chatList[index];
+
+                    // Ambil nama seller dari data join 'users' di repository
+                    final sellerName = chat['users'] != null 
+                        ? (chat['users']['name'] ?? "Penjual") 
+                        : "Penjual";
+                        
+                    final chatId = chat['chat_id'] ?? chat['payment_id'];
+
+                    return _buildChatCard(
+                      context: context,
+                      name: sellerName,
+                      message: "Ketuk untuk melihat pesan", // Bisa diganti pesan terakhir jika ada di DB
+                      date: "", // Tanggal bisa diambil dari field created_at jika perlu
+                      isBroadcast: false,
+                      onTap: () {
+                        // Navigasi ke Detail Chat yang sesungguhnya
+                        context.push(
+                          '/buyer/chat/detail',
+                          extra: {'chatId': chatId, 'title': sellerName},
+                        );
+                      },
+                    );
+                  },
                 );
               },
             ),
-
             // ------------------------------------------------
             // TAB 2: BROADCAST LIST (Dinamis via ViewModel)
             // ------------------------------------------------

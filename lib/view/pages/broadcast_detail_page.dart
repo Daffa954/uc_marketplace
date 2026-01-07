@@ -13,17 +13,18 @@ class BroadcastDetailPage extends StatelessWidget {
       {
         "message": "Selamat datang di channel Info Promo UC!",
         "time": "10:00",
-        "date": "20 Nov 2024"
+        "date": "20 Nov 2024",
       },
       {
         "message": "Dapatkan diskon ongkir 50% khusus hari ini jam 12-1 siang.",
         "time": "10:05",
-        "date": "20 Nov 2024"
+        "date": "20 Nov 2024",
       },
       {
-        "message": "Flash Sale Alert! ⚡\nNasi Goreng Spesial hanya Rp 10.000 (Normal Rp 18.000). Stok terbatas!",
+        "message":
+            "Flash Sale Alert! ⚡\nNasi Goreng Spesial hanya Rp 10.000 (Normal Rp 18.000). Stok terbatas!",
         "time": "09:00",
-        "date": "Hari Ini"
+        "date": "Hari Ini",
       },
     ];
 
@@ -80,7 +81,7 @@ class BroadcastDetailPage extends StatelessWidget {
               ],
             ),
           ),
-          
+
           // List Chat Bubble
           Expanded(
             child: ListView.builder(
@@ -96,7 +97,7 @@ class BroadcastDetailPage extends StatelessWidget {
               },
             ),
           ),
-          
+
           // Area input dihilangkan untuk Buyer (View Only)
         ],
       ),
@@ -111,7 +112,8 @@ class BroadcastDetailPage extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: 20),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start, // Broadcast selalu dari kiri (incoming)
+        crossAxisAlignment:
+            CrossAxisAlignment.start, // Broadcast selalu dari kiri (incoming)
         children: [
           // Bubble
           Container(
@@ -129,10 +131,7 @@ class BroadcastDetailPage extends StatelessWidget {
             ),
             child: Text(
               message,
-              style: const TextStyle(
-                color: MyApp.textDark,
-                fontSize: 14,
-              ),
+              style: const TextStyle(color: MyApp.textDark, fontSize: 14),
             ),
           ),
           const SizedBox(height: 5),
@@ -141,10 +140,7 @@ class BroadcastDetailPage extends StatelessWidget {
             padding: const EdgeInsets.only(left: 5),
             child: Text(
               "$time • $date",
-              style: TextStyle(
-                color: Colors.grey.shade500,
-                fontSize: 10,
-              ),
+              style: TextStyle(color: Colors.grey.shade500, fontSize: 10),
             ),
           ),
         ],
