@@ -14,7 +14,7 @@ class PickupFormController {
   final TextEditingController end = TextEditingController();
   final TextEditingController lat = TextEditingController();
   final TextEditingController lng = TextEditingController();
-
+  List<XFile> selectedPhotos = [];
   void dispose() {
     placeName.dispose();
     desc.dispose();
@@ -104,9 +104,9 @@ class _SellerAddPreOrderPageState extends State<SellerAddPreOrderPage> {
       lastDate: DateTime(2030),
       builder: (context, child) {
         return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: ColorScheme.light(primary: primaryOrange),
-          ),
+          data: Theme.of(
+            context,
+          ).copyWith(colorScheme: ColorScheme.light(primary: primaryOrange)),
           child: child!,
         );
       },
@@ -125,9 +125,9 @@ class _SellerAddPreOrderPageState extends State<SellerAddPreOrderPage> {
       initialTime: TimeOfDay.now(),
       builder: (context, child) {
         return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: ColorScheme.light(primary: primaryOrange),
-          ),
+          data: Theme.of(
+            context,
+          ).copyWith(colorScheme: ColorScheme.light(primary: primaryOrange)),
           child: child!,
         );
       },
@@ -154,7 +154,9 @@ class _SellerAddPreOrderPageState extends State<SellerAddPreOrderPage> {
         form.lng.text = result.longitude.toStringAsFixed(6);
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Lokasi dipilih: ${form.lat.text}, ${form.lng.text}")),
+        SnackBar(
+          content: Text("Lokasi dipilih: ${form.lat.text}, ${form.lng.text}"),
+        ),
       );
     }
   }
@@ -200,7 +202,9 @@ class _SellerAddPreOrderPageState extends State<SellerAddPreOrderPage> {
       if (form.lat.text.isEmpty || form.lng.text.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Harap pilih lokasi pada peta untuk semua titik pickup'),
+            content: Text(
+              'Harap pilih lokasi pada peta untuk semua titik pickup',
+            ),
           ),
         );
         return;
@@ -233,14 +237,17 @@ class _SellerAddPreOrderPageState extends State<SellerAddPreOrderPage> {
       }).toList();
 
       final vm = context.read<PreOrderViewModel>();
-
+      List<List<XFile>> allPickupImages = _pickupForms
+          .map((form) => form.selectedPhotos)
+          .toList();
       // [PERBAIKAN 3] LANGSUNG KIRIM XFILE KE VIEWMODEL
       // Tidak perlu konversi ke File() lagi karena ViewModel sudah diperbarui menerima XFile
       final success = await vm.createFullPreOrder(
         preOrder: newPO,
         pickups: pickups,
         menuStocks: menuStocksData,
-        imageFile: _selectedImage, // Ini tipe datanya XFile? (Cocok!)
+        imageFile: _selectedImage,
+        pickupImagesList: allPickupImages,
       );
 
       if (success && mounted) {
@@ -250,11 +257,15 @@ class _SellerAddPreOrderPageState extends State<SellerAddPreOrderPage> {
         Navigator.pop(context, true);
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Gagal membuat Pre-Order. Cek koneksi.')),
+          const SnackBar(
+            content: Text('Gagal membuat Pre-Order. Cek koneksi.'),
+          ),
         );
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error: $e')));
     }
   }
 
@@ -295,8 +306,11 @@ class _SellerAddPreOrderPageState extends State<SellerAddPreOrderPage> {
                       image: _selectedImage != null
                           ? DecorationImage(
                               image: kIsWeb
-                                  ? NetworkImage(_selectedImage!.path) // Web: Blob URL
-                                  : FileImage(File(_selectedImage!.path)) as ImageProvider, // Mobile: File Path
+                                  ? NetworkImage(
+                                      _selectedImage!.path,
+                                    ) // Web: Blob URL
+                                  : FileImage(File(_selectedImage!.path))
+                                        as ImageProvider, // Mobile: File Path
                               fit: BoxFit.cover,
                             )
                           : null,
@@ -355,21 +369,33 @@ class _SellerAddPreOrderPageState extends State<SellerAddPreOrderPage> {
 
               // ... SISA UI TETAP SAMA ...
               _buildSectionTitle("1. Detail Pre-Order"),
-              _buildTextField("Nama Batch PO", _poNameController, Icons.bookmark_border),
+              _buildTextField(
+                "Nama Batch PO",
+                _poNameController,
+                Icons.bookmark_border,
+              ),
               const SizedBox(height: 10),
               Row(
                 children: [
-                  Expanded(child: _buildDateField("Tgl Buka", _openDateController)),
+                  Expanded(
+                    child: _buildDateField("Tgl Buka", _openDateController),
+                  ),
                   const SizedBox(width: 10),
-                  Expanded(child: _buildTimeField("Jam Buka", _openTimeController)),
+                  Expanded(
+                    child: _buildTimeField("Jam Buka", _openTimeController),
+                  ),
                 ],
               ),
               const SizedBox(height: 10),
               Row(
                 children: [
-                  Expanded(child: _buildDateField("Tgl Tutup", _closeDateController)),
+                  Expanded(
+                    child: _buildDateField("Tgl Tutup", _closeDateController),
+                  ),
                   const SizedBox(width: 10),
-                  Expanded(child: _buildTimeField("Jam Tutup", _closeTimeController)),
+                  Expanded(
+                    child: _buildTimeField("Jam Tutup", _closeTimeController),
+                  ),
                 ],
               ),
               const SizedBox(height: 30),
@@ -619,6 +645,90 @@ class _SellerAddPreOrderPageState extends State<SellerAddPreOrderPage> {
           _buildTextField("Detail Alamat", form.desc, Icons.description),
           const SizedBox(height: 10),
           _buildDateField("Tgl Pickup", form.date),
+          const SizedBox(height: 10),
+          const Text(
+            "Foto Lokasi (Opsional)",
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+          ),
+          const SizedBox(height: 8),
+          SizedBox(
+            height: 80,
+            child: ListView(
+              scrollDirection: Axis.horizontal,
+              children: [
+                // 1. Tombol Tambah Foto
+                InkWell(
+                  onTap: () async {
+                    final picker = ImagePicker();
+                    // Pilih BANYAK gambar
+                    final List<XFile> images = await picker.pickMultiImage();
+                    if (images.isNotEmpty) {
+                      setState(() {
+                        form.selectedPhotos.addAll(images);
+                      });
+                    }
+                  },
+                  child: Container(
+                    width: 80,
+                    height: 80,
+                    margin: const EdgeInsets.only(right: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[200],
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.grey[400]!),
+                    ),
+                    child: const Icon(Icons.add_a_photo, color: Colors.grey),
+                  ),
+                ),
+
+                // 2. List Foto yang Dipilih
+                ...form.selectedPhotos.asMap().entries.map((entry) {
+                  final imgIndex = entry.key;
+                  final xfile = entry.value;
+                  return Stack(
+                    children: [
+                      Container(
+                        width: 80,
+                        height: 80,
+                        margin: const EdgeInsets.only(right: 8),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(8),
+                          image: DecorationImage(
+                            // Logic Web vs Mobile
+                            image: kIsWeb 
+                                ? NetworkImage(xfile.path) 
+                                : FileImage(File(xfile.path)) as ImageProvider,
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                      ),
+                      // Tombol Hapus (X)
+                      Positioned(
+                        top: 0,
+                        right: 8,
+                        child: GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              form.selectedPhotos.removeAt(imgIndex);
+                            });
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.all(2),
+                            decoration: const BoxDecoration(
+                              color: Colors.red,
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(Icons.close, size: 14, color: Colors.white),
+                          ),
+                        ),
+                      ),
+                    ],
+                  );
+                }).toList(),
+              ],
+            ),
+          ),
+          
           const SizedBox(height: 10),
           Row(
             children: [

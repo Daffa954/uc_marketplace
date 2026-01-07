@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:uc_marketplace/main_wrapper.dart';
 import 'package:uc_marketplace/model/model.dart';
+import 'package:uc_marketplace/view/pages/buyer_rating_page.dart';
 import 'package:uc_marketplace/view/pages/pages.dart';
 import 'package:uc_marketplace/view/pages/seller_menu_detail_page.dart';
 import 'package:uc_marketplace/view/pages/seller_po_detail_page.dart';
@@ -54,8 +55,7 @@ class AppRouter {
                     },
                   ),
                   GoRoute(
-                    path:
-                        'menu-detail',
+                    path: 'menu-detail',
                     parentNavigatorKey: rootNavigatorKey, // Tutup bottom bar
                     builder: (context, state) {
                       final menu = state.extra as MenuModel;
@@ -109,7 +109,6 @@ class AppRouter {
                   ),
                 ],
               ),
-
             ],
           ),
           StatefulShellBranch(
@@ -117,10 +116,25 @@ class AppRouter {
               GoRoute(
                 path: '/buyer/history',
                 builder: (context, state) => const HistoryOrderPage(),
+                routes: [
+                  //add rating route
+                  GoRoute(
+                    path: 'rating',
+                    builder: (context, state) {
+                      final extra = state.extra as Map<String, dynamic>;
+                      return RatingDialog(
+                        menuId: extra['menuId'],
+                        menuName: extra['menuName'],
+                        orderId: extra['orderId'],
+                        preOrderId: extra['preOrderId'],
+                      );
+                    },
+                  ),
+                ],
               ),
             ],
           ),
-           StatefulShellBranch(
+          StatefulShellBranch(
             routes: [
               GoRoute(
                 path: '/buyer/chat',
@@ -133,7 +147,8 @@ class AppRouter {
             routes: [
               GoRoute(
                 path: '/buyer/chat',
-                builder: (context, state) => const BuyerChatPage(), // Link to buyer_chat.dart
+                builder: (context, state) =>
+                    const BuyerChatPage(), // Link to buyer_chat.dart
               ),
             ],
           ),
@@ -146,7 +161,8 @@ class AppRouter {
                 routes: [
                   GoRoute(
                     path: 'detail', // Full path: /buyer/chat/detail
-                    parentNavigatorKey: rootNavigatorKey, // Covers the bottom bar
+                    parentNavigatorKey:
+                        rootNavigatorKey, // Covers the bottom bar
                     builder: (context, state) {
                       final extra = state.extra as Map<String, dynamic>;
                       return ChatDetailPage(

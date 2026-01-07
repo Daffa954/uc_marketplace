@@ -153,6 +153,45 @@ class PreOrderRepository {
     }
   }
 
+  Future<List<String>> uploadPickupImages(List<XFile> images) async {
+    List<String> uploadedUrls = [];
+
+    for (var image in images) {
+      try {
+        final bytes = await image.readAsBytes();
+        final fileExt = image.name.split('.').last;
+        // Nama file unik: timestamp_random.jpg
+        final fileName =
+            'pickup_${DateTime.now().millisecondsSinceEpoch}_${image.name}';
+        final path =
+            'pickup_locations/$fileName'; // Simpan di folder pickup_locations
+
+        final mimeType = image.mimeType ?? 'image/$fileExt';
+
+        await _supabase.storage
+            .from('preorder-images')
+            .uploadBinary(
+              path,
+              bytes,
+              fileOptions: FileOptions(
+                cacheControl: '3600',
+                upsert: false,
+                contentType: mimeType,
+              ),
+            );
+
+        final imageUrl = _supabase.storage
+            .from('preorder-images')
+            .getPublicUrl(path);
+        uploadedUrls.add(imageUrl);
+      } catch (e) {
+        debugPrint("Gagal upload salah satu gambar pickup: $e");
+        // Kita lanjut ke gambar berikutnya meskipun satu gagal
+      }
+    }
+    return uploadedUrls;
+  }
+
   Future<void> createPoPickup(PoPickupModel pickup) async {
     try {
       final data = pickup.toJson();
@@ -171,31 +210,35 @@ class PreOrderRepository {
     }
   }
 
- // --- [PERBAIKAN] UPLOAD IMAGE (WEB & MOBILE SUPPORT) ---
+  // --- [PERBAIKAN] UPLOAD IMAGE (WEB & MOBILE SUPPORT) ---
   Future<String?> uploadPreOrderImage(XFile imageFile) async {
     try {
       final bytes = await imageFile.readAsBytes();
-      
+
       // [FIX 1] Gunakan 'name' untuk ambil ekstensi (aman untuk Web & Mobile)
-      final fileExt = imageFile.name.split('.').last; 
-      
+      final fileExt = imageFile.name.split('.').last;
+
       final fileName = 'po_${DateTime.now().millisecondsSinceEpoch}.$fileExt';
-      final path = 'covers/$fileName'; 
+      final path = 'covers/$fileName';
 
       // [FIX 2] Gunakan mimeType bawaan XFile, atau fallback manual
       final mimeType = imageFile.mimeType ?? 'image/$fileExt';
 
-      await _supabase.storage.from('preorder-images').uploadBinary(
-        path,
-        bytes,
-        fileOptions: FileOptions(
-          cacheControl: '3600', 
-          upsert: false,
-          contentType: mimeType, // Pastikan content-type valid
-        ),
-      );
+      await _supabase.storage
+          .from('preorder-images')
+          .uploadBinary(
+            path,
+            bytes,
+            fileOptions: FileOptions(
+              cacheControl: '3600',
+              upsert: false,
+              contentType: mimeType, // Pastikan content-type valid
+            ),
+          );
 
-      final imageUrl = _supabase.storage.from('preorder-images').getPublicUrl(path);
+      final imageUrl = _supabase.storage
+          .from('preorder-images')
+          .getPublicUrl(path);
       return imageUrl;
     } catch (e) {
       debugPrint("Error uploading image: $e");

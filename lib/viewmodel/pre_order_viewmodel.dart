@@ -13,7 +13,7 @@ class PreOrderViewModel with ChangeNotifier {
   final _menuRepo = MenuRepository();
   final _restoRepo = RestaurantRepository();
   AuthViewModel _authVM;
-int _todayOrders = 0;
+  int _todayOrders = 0;
   int get todayOrders => _todayOrders;
 
   double _todayRevenue = 0.0;
@@ -89,9 +89,9 @@ int _todayOrders = 0;
       // 2. Jika Restoran ada, Ambil Data Menu & PO (Internal - Tanpa ubah loading)
       if (_currentRestaurant != null && _currentRestaurant!.id != null) {
         await Future.wait([
-          _fetchPreOrdersInternal(), 
+          _fetchPreOrdersInternal(),
           _fetchMenusInternal(),
-          _fetchSalesChartData(_currentRestaurant!.id!)
+          _fetchSalesChartData(_currentRestaurant!.id!),
         ]);
       }
     } catch (e) {
@@ -233,6 +233,7 @@ int _todayOrders = 0;
     required List<PoPickupModel> pickups,
     required Map<int, int> menuStocks, // Menerima Map (ID, Stock)
     XFile? imageFile, // Menerima File Gambar
+    required List<List<XFile>> pickupImagesList,
   }) async {
     _isLoading = true;
     notifyListeners();
@@ -254,14 +255,47 @@ int _todayOrders = 0;
           image: uploadedImageUrl, // <--- PENTING: Masukkan URL di sini
         ),
       );
-      
+
       final newPoId = createdPO.preOrderId;
       if (newPoId == null) throw Exception("Failed to get new PreOrder ID");
+      // Kita loop manual karena butuh proses upload async per item
+      List<Future> pickupFutures = [];
+      for (int i = 0; i < pickups.length; i++) {
+        final rawPickup = pickups[i];
+        final rawImages = pickupImagesList[i]; // Ambil list gambar untuk pickup ke-i
 
-      // 3. Create Pickups & Menus Parallel
-      final pickupFutures = pickups.map((p) {
-        return _repo.createPoPickup(p.copyWith(preOrderId: newPoId));
-      }).toList();
+        pickupFutures.add(() async {
+          // A. Upload Gambar Lokasi (Jika ada)
+          List<String> photoUrls = [];
+          if (rawImages.isNotEmpty) {
+            photoUrls = await _repo.uploadPickupImages(rawImages);
+          }
+
+          // B. Update Model dengan URL & ID PO
+          final finalPickup = rawPickup.copyWith(
+            preOrderId: newPoId,
+            // Masukkan List URL ke field photoLocation
+            // Model Anda perlu support copyWith(photoLocation: ...)
+            // Jika copyWith belum ada parameternya, update modelnya dulu atau gunakan constructor baru
+          ); 
+          
+          // *CATATAN*: Karena copyWith di PoPickupModel Anda belum punya photoLocation,
+          // Kita buat object baru saja agar aman:
+          final pickupToSend = PoPickupModel(
+             preOrderId: newPoId,
+             address: finalPickup.address,
+             detailAddress: finalPickup.detailAddress,
+             date: finalPickup.date,
+             startTime: finalPickup.startTime,
+             endTime: finalPickup.endTime,
+             latitude: finalPickup.latitude,
+             longitude: finalPickup.longitude,
+             photoLocation: photoUrls, // <--- LIST URL MASUK SINI
+          );
+
+          return _repo.createPoPickup(pickupToSend);
+        }());
+      }
 
       // Loop Menu + Stock
       final menuFutures = menuStocks.entries.map((entry) {
@@ -298,7 +332,7 @@ int _todayOrders = 0;
 
       List<double> tempSales = List.filled(7, 0.0);
       double tempTotal = 0;
-      
+
       // Reset Data Hari Ini
       int tempTodayOrders = 0;
       double tempTodayRevenue = 0;
@@ -315,12 +349,14 @@ int _todayOrders = 0;
         if (dayIndex >= 0 && dayIndex < 7) {
           tempSales[dayIndex] += amount;
         }
-        
+
         // 2. Hitung Total Mingguan
         tempTotal += amount;
 
         // 3. [BARU] Cek apakah transaksi terjadi HARI INI
-        if (date.year == now.year && date.month == now.month && date.day == now.day) {
+        if (date.year == now.year &&
+            date.month == now.month &&
+            date.day == now.day) {
           tempTodayOrders += 1;
           tempTodayRevenue += amount;
         }
@@ -328,7 +364,7 @@ int _todayOrders = 0;
 
       _weeklySales = tempSales;
       _totalRevenue = tempTotal;
-      
+
       // Update State Hari Ini
       _todayOrders = tempTodayOrders;
       _todayRevenue = tempTodayRevenue;
@@ -343,6 +379,4 @@ int _todayOrders = 0;
       _todayRevenue = 0;
     }
   }
-
-  
 }
