@@ -1,8 +1,9 @@
 part of 'pages.dart';
 
-// Jangan lupa import ini di file pages.dart atau di atas file ini
-// import 'package:image_picker/image_picker.dart';
+// PASTIKAN IMPORT INI ADA
 // import 'dart:io';
+// import 'package:flutter/foundation.dart'; // Untuk kIsWeb
+// import 'package:image_picker/image_picker.dart';
 
 // --- HELPER CLASS ---
 class PickupFormController {
@@ -50,8 +51,8 @@ class _SellerAddPreOrderPageState extends State<SellerAddPreOrderPage> {
   final List<PickupFormController> _pickupForms = [PickupFormController()];
   final Map<int, TextEditingController> _menuStockControllers = {};
 
-  // --- [BARU] STATE GAMBAR ---
-  File? _selectedImage;
+  // --- [PERBAIKAN 1] GUNAKAN XFILE (BUKAN FILE) ---
+  XFile? _selectedImage;
 
   @override
   void dispose() {
@@ -65,14 +66,15 @@ class _SellerAddPreOrderPageState extends State<SellerAddPreOrderPage> {
     super.dispose();
   }
 
-  // --- [BARU] LOGIC: PICK IMAGE ---
+  // --- [PERBAIKAN 2] LOGIC PICK IMAGE ---
   Future<void> _pickImage() async {
     final picker = ImagePicker();
+    // Langsung terima XFile, tidak perlu cast ke File
     final pickedFile = await picker.pickImage(source: ImageSource.gallery);
 
     if (pickedFile != null) {
       setState(() {
-        _selectedImage = pickedFile as File?; // Simpan mentahannya (XFile)
+        _selectedImage = pickedFile;
       });
     }
   }
@@ -102,9 +104,9 @@ class _SellerAddPreOrderPageState extends State<SellerAddPreOrderPage> {
       lastDate: DateTime(2030),
       builder: (context, child) {
         return Theme(
-          data: Theme.of(
-            context,
-          ).copyWith(colorScheme: ColorScheme.light(primary: primaryOrange)),
+          data: Theme.of(context).copyWith(
+            colorScheme: ColorScheme.light(primary: primaryOrange),
+          ),
           child: child!,
         );
       },
@@ -123,9 +125,9 @@ class _SellerAddPreOrderPageState extends State<SellerAddPreOrderPage> {
       initialTime: TimeOfDay.now(),
       builder: (context, child) {
         return Theme(
-          data: Theme.of(
-            context,
-          ).copyWith(colorScheme: ColorScheme.light(primary: primaryOrange)),
+          data: Theme.of(context).copyWith(
+            colorScheme: ColorScheme.light(primary: primaryOrange),
+          ),
           child: child!,
         );
       },
@@ -139,7 +141,7 @@ class _SellerAddPreOrderPageState extends State<SellerAddPreOrderPage> {
     }
   }
 
-  // --- LOGIC: MAP PICKER TERHUBUNG ---
+  // --- LOGIC: MAP PICKER ---
   Future<void> _pickLocation(PickupFormController form) async {
     final result = await Navigator.push(
       context,
@@ -152,9 +154,7 @@ class _SellerAddPreOrderPageState extends State<SellerAddPreOrderPage> {
         form.lng.text = result.longitude.toStringAsFixed(6);
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text("Lokasi dipilih: ${form.lat.text}, ${form.lng.text}"),
-        ),
+        SnackBar(content: Text("Lokasi dipilih: ${form.lat.text}, ${form.lng.text}")),
       );
     }
   }
@@ -200,9 +200,7 @@ class _SellerAddPreOrderPageState extends State<SellerAddPreOrderPage> {
       if (form.lat.text.isEmpty || form.lng.text.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text(
-              'Harap pilih lokasi pada peta untuk semua titik pickup',
-            ),
+            content: Text('Harap pilih lokasi pada peta untuk semua titik pickup'),
           ),
         );
         return;
@@ -219,7 +217,6 @@ class _SellerAddPreOrderPageState extends State<SellerAddPreOrderPage> {
         status: 'OPEN',
         currentQuota: 0,
         targetQuota: 100,
-        // Image URL akan diisi oleh ViewModel setelah upload
       );
 
       List<PoPickupModel> pickups = _pickupForms.map((form) {
@@ -236,17 +233,14 @@ class _SellerAddPreOrderPageState extends State<SellerAddPreOrderPage> {
       }).toList();
 
       final vm = context.read<PreOrderViewModel>();
-// Konversi XFile ke File untuk dikirim ke ViewModel
-      File? imageFileToSend;
-      if (_selectedImage != null) {
-        imageFileToSend = File(_selectedImage!.path);
-      }
-      // [UPDATE] KIRIM FILE GAMBAR KE VIEWMODEL
+
+      // [PERBAIKAN 3] LANGSUNG KIRIM XFILE KE VIEWMODEL
+      // Tidak perlu konversi ke File() lagi karena ViewModel sudah diperbarui menerima XFile
       final success = await vm.createFullPreOrder(
         preOrder: newPO,
         pickups: pickups,
         menuStocks: menuStocksData,
-        imageFile: imageFileToSend, // <--- Kirim file di sini
+        imageFile: _selectedImage, // Ini tipe datanya XFile? (Cocok!)
       );
 
       if (success && mounted) {
@@ -256,15 +250,11 @@ class _SellerAddPreOrderPageState extends State<SellerAddPreOrderPage> {
         Navigator.pop(context, true);
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Gagal membuat Pre-Order. Cek koneksi.'),
-          ),
+          const SnackBar(content: Text('Gagal membuat Pre-Order. Cek koneksi.')),
         );
       }
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Error: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
     }
   }
 
@@ -290,7 +280,7 @@ class _SellerAddPreOrderPageState extends State<SellerAddPreOrderPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // --- [BARU] IMAGE PICKER UI ---
+              // --- IMAGE PICKER UI ---
               Center(
                 child: GestureDetector(
                   onTap: _pickImage,
@@ -301,11 +291,12 @@ class _SellerAddPreOrderPageState extends State<SellerAddPreOrderPage> {
                       color: Colors.grey[200],
                       borderRadius: BorderRadius.circular(15),
                       border: Border.all(color: Colors.grey[400]!),
+                      // [PERBAIKAN 4] PREVIEW LOGIC
                       image: _selectedImage != null
                           ? DecorationImage(
                               image: kIsWeb
-                                  ? NetworkImage(_selectedImage!.path) // KHUSUS WEB
-                                  : FileImage(File(_selectedImage!.path)) as ImageProvider, // KHUSUS MOBILE
+                                  ? NetworkImage(_selectedImage!.path) // Web: Blob URL
+                                  : FileImage(File(_selectedImage!.path)) as ImageProvider, // Mobile: File Path
                               fit: BoxFit.cover,
                             )
                           : null,
@@ -362,34 +353,23 @@ class _SellerAddPreOrderPageState extends State<SellerAddPreOrderPage> {
               ),
               const SizedBox(height: 30),
 
+              // ... SISA UI TETAP SAMA ...
               _buildSectionTitle("1. Detail Pre-Order"),
-              _buildTextField(
-                "Nama Batch PO",
-                _poNameController,
-                Icons.bookmark_border,
-              ),
+              _buildTextField("Nama Batch PO", _poNameController, Icons.bookmark_border),
               const SizedBox(height: 10),
               Row(
                 children: [
-                  Expanded(
-                    child: _buildDateField("Tgl Buka", _openDateController),
-                  ),
+                  Expanded(child: _buildDateField("Tgl Buka", _openDateController)),
                   const SizedBox(width: 10),
-                  Expanded(
-                    child: _buildTimeField("Jam Buka", _openTimeController),
-                  ),
+                  Expanded(child: _buildTimeField("Jam Buka", _openTimeController)),
                 ],
               ),
               const SizedBox(height: 10),
               Row(
                 children: [
-                  Expanded(
-                    child: _buildDateField("Tgl Tutup", _closeDateController),
-                  ),
+                  Expanded(child: _buildDateField("Tgl Tutup", _closeDateController)),
                   const SizedBox(width: 10),
-                  Expanded(
-                    child: _buildTimeField("Jam Tutup", _closeTimeController),
-                  ),
+                  Expanded(child: _buildTimeField("Jam Tutup", _closeTimeController)),
                 ],
               ),
               const SizedBox(height: 30),

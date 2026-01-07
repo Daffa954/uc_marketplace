@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:uc_marketplace/model/model.dart';
 import 'package:uc_marketplace/repository/menu_repository.dart';
 import 'package:uc_marketplace/repository/po_repository.dart';
@@ -227,7 +228,7 @@ class PreOrderViewModel with ChangeNotifier {
     required PreOrderModel preOrder,
     required List<PoPickupModel> pickups,
     required Map<int, int> menuStocks, // Menerima Map (ID, Stock)
-    File? imageFile, // Menerima File Gambar
+    XFile? imageFile, // Menerima File Gambar
   }) async {
     _isLoading = true;
     notifyListeners();

@@ -37,8 +37,8 @@ class PoPickupModel {
       address: json['address'],
       detailAddress: json['detail_address'], // Map from schema
       longitude: (json['longitude'] as num?)?.toDouble(),
-      // Maps schema 'altitude' key to our 'latitude' property
-      latitude: (json['altitude'] as num?)?.toDouble(), 
+      // Maps schema 'latitude' key to our 'latitude' property
+      latitude: (json['latitude'] as num?)?.toDouble(), 
       photoLocation: json['photo_location'] != null
           ? List<String>.from(json['photo_location'])
           : [],
@@ -53,8 +53,8 @@ class PoPickupModel {
     'address': address,
     'detail_address': detailAddress, // Match schema
     'longitude': longitude,
-    // IMPORTANT: Map Dart 'latitude' back to schema key 'altitude'
-    'altitude': latitude, 
+    // IMPORTANT: Map Dart 'latitude' back to schema key 'latitude'
+    'latitude': latitude, 
     'photo_location': photoLocation,
   };
 

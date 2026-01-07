@@ -134,8 +134,8 @@ class HomeViewModel with ChangeNotifier {
 
         // Cari pickup point terdekat dari user untuk PO ini
         for (var p in pickups) {
-          double? lat = (p['altitude'] as num?)
-              ?.toDouble(); // Ingat mapping latitude Anda 'altitude'
+          double? lat = (p['latitude'] as num?)
+              ?.toDouble(); // Ingat mapping latitude Anda 'latitude'
           double? long = (p['longitude'] as num?)?.toDouble();
 
           if (lat != null && long != null) {

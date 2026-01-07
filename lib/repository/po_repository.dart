@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uc_marketplace/model/model.dart';
 
@@ -104,7 +105,7 @@ class PreOrderRepository {
           'address': place.address, // Maps to 'address' in schema
           'detail_address': place.detailAddress, // Maps to 'detail_address'
           'longitude': place.longitude, // Matches schema
-          'altitude': place.latitude, // ATTENTION: Using schema name 'altitude'
+          'latitude': place.latitude, // ATTENTION: Using schema name 'latitude'
           'photo_location':
               place.photoLocation, // Maps to 'photo_location(json)'
         };
@@ -170,29 +171,35 @@ class PreOrderRepository {
     }
   }
 
- Future<String?> uploadPreOrderImage(File imageFile) async {
+ // --- [PERBAIKAN] UPLOAD IMAGE (WEB & MOBILE SUPPORT) ---
+  Future<String?> uploadPreOrderImage(XFile imageFile) async {
     try {
-      // 1. Buat nama file unik (agar tidak tertimpa)
-      // Contoh: po_1709823123.jpg
-      final fileName = 'po_${DateTime.now().millisecondsSinceEpoch}.jpg';
+      final bytes = await imageFile.readAsBytes();
       
-      // 2. Tentukan Path di dalam Bucket
+      // [FIX 1] Gunakan 'name' untuk ambil ekstensi (aman untuk Web & Mobile)
+      final fileExt = imageFile.name.split('.').last; 
+      
+      final fileName = 'po_${DateTime.now().millisecondsSinceEpoch}.$fileExt';
       final path = 'covers/$fileName'; 
 
-      // 3. Upload ke Bucket 'preorder-images'
-      await _supabase.storage.from('preorder-images').upload(
+      // [FIX 2] Gunakan mimeType bawaan XFile, atau fallback manual
+      final mimeType = imageFile.mimeType ?? 'image/$fileExt';
+
+      await _supabase.storage.from('preorder-images').uploadBinary(
         path,
-        imageFile,
-        fileOptions: const FileOptions(cacheControl: '3600', upsert: false),
+        bytes,
+        fileOptions: FileOptions(
+          cacheControl: '3600', 
+          upsert: false,
+          contentType: mimeType, // Pastikan content-type valid
+        ),
       );
 
-      // 4. Ambil Public URL agar bisa disimpan di Database
       final imageUrl = _supabase.storage.from('preorder-images').getPublicUrl(path);
-      
       return imageUrl;
     } catch (e) {
-      print("Error uploading image: $e");
-      return null; // Return null jika gagal upload
+      debugPrint("Error uploading image: $e");
+      return null;
     }
   }
 
@@ -205,7 +212,7 @@ class PreOrderRepository {
         'stock': poMenu.stock,
       };
 
-      await _supabase.from('pre_order_menus').insert(data);
+      await _supabase.from('pre_order_menu').insert(data);
     } catch (e) {
       throw Exception("Failed to link Menu: $e");
     }
