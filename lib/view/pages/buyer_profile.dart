@@ -1,7 +1,22 @@
 part of 'pages.dart';
 
-class BuyerProfilePage extends StatelessWidget {
+class BuyerProfilePage extends StatefulWidget {
   const BuyerProfilePage({super.key});
+
+  @override
+  State<BuyerProfilePage> createState() => _BuyerProfilePageState();
+}
+
+class _BuyerProfilePageState extends State<BuyerProfilePage> {
+  
+  @override
+  void initState() {
+    super.initState();
+    // Fetch data user saat halaman dibuka
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<AuthViewModel>(context, listen: false).loadUserProfile();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -10,164 +25,164 @@ class BuyerProfilePage extends StatelessWidget {
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
-          child: Column(
-            children: [
-              // --- HEADER (Back Button, Title, More) ---
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  _buildCircleButton(
-                    icon: Icons.arrow_back_ios_new_rounded,
-                    onTap: () => context.pop(), // Kembali ke halaman sebelumnya
-                  ),
-                  const Text(
-                    "Menu Profile",
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: MyApp.textDark,
-                    ),
-                  ),
-                  _buildCircleButton(
-                    icon: Icons.more_horiz,
-                    onTap: () {},
-                  ),
-                ],
-              ),
+          child: Consumer<AuthViewModel>(
+            builder: (context, userVM, child) {
+              
+              // 1. LOADING STATE
+              if (userVM.isLoading) {
+                return const SizedBox(
+                  height: 400,
+                  child: Center(child: CircularProgressIndicator(color: Color(0xFFFF7F27))),
+                );
+              }
 
-              const SizedBox(height: 30),
+              // 2. DATA USER (Bisa Null jika error/belum login)
+              final user = userVM.user;
+              final userName = user?.name ?? "Guest User";
+              final userEmail = user?.email ?? "Silakan Login";
+              // Avatar sementara pakai inisial nama jika tidak ada foto
+              final initial = userName.isNotEmpty ? userName[0].toUpperCase() : "G";
 
-              // --- PROFILE INFO (Avatar & Name) ---
-              Row(
+              return Column(
                 children: [
-                  const CircleAvatar(
-                    radius: 35,
-                    backgroundImage: NetworkImage(
-                        'https://i.pravatar.cc/150?img=12'), // Gambar dummy user cowok
-                  ),
-                  const SizedBox(width: 20),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  // --- HEADER ---
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
-                        "Septa",
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: MyApp.textDark,
-                        ),
+                      _buildCircleButton(
+                        icon: Icons.arrow_back_ios_new_rounded,
+                        onTap: () => context.pop(), 
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        "I love fast food",
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey.shade500,
-                        ),
+                      const Text(
+                        "Menu Profile",
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black87),
+                      ),
+                      _buildCircleButton(
+                        icon: Icons.more_horiz,
+                        onTap: () {},
                       ),
                     ],
                   ),
+
+                  const SizedBox(height: 30),
+
+                  // --- PROFILE INFO (Dinamis dari Supabase) ---
+                  Row(
+                    children: [
+                      // Avatar Inisial (karena model belum ada field photoURL)
+                      CircleAvatar(
+                        radius: 35,
+                        backgroundColor: const Color(0xFFFF7F27).withOpacity(0.2),
+                        child: Text(
+                          initial,
+                          style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Color(0xFFFF7F27)),
+                        ),
+                      ),
+                      const SizedBox(width: 20),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            userName,
+                            style: const TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black87,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            userEmail,
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey.shade500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 30),
+
+                  // --- GROUP 1: Personal Info ---
+                  _buildMenuContainer(
+                    children: [
+                      _buildMenuItem(
+                        icon: Icons.person_outline,
+                        iconColor: Colors.orange,
+                        title: "Personal Info",
+                        onTap: () {},
+                      ),
+                      _buildMenuItem(
+                        icon: Icons.map_outlined,
+                        iconColor: Colors.purple,
+                        title: "Addresses",
+                        onTap: () {},
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  // --- GROUP 2: History & Cart ---
+                  _buildMenuContainer(
+                    children: [
+                       _buildMenuItem(
+                        icon: Icons.history, // Icon History
+                        iconColor: Colors.green,
+                        title: "Riwayat Pesanan",
+                        onTap: () {
+                          // Navigasi ke Halaman History Order
+                          context.push('/buyer/history');
+                        },
+                      ),
+                      _buildMenuItem(
+                        icon: Icons.shopping_bag_outlined,
+                        iconColor: Colors.blue,
+                        title: "Cart",
+                        onTap: () {},
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  // --- GROUP 4: Log Out ---
+                  _buildMenuContainer(
+                    children: [
+                      _buildMenuItem(
+                        icon: Icons.logout,
+                        iconColor: Colors.red,
+                        title: "Log Out",
+                        isLogOut: true,
+                        onTap: () async {
+                          // Konfirmasi Logout
+                          final bool? confirm = await showDialog(
+                            context: context,
+                            builder: (ctx) => AlertDialog(
+                              title: const Text("Logout"),
+                              content: const Text("Apakah Anda yakin ingin keluar?"),
+                              actions: [
+                                TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text("Batal")),
+                                TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text("Ya, Keluar")),
+                              ],
+                            ),
+                          );
+
+                          if (confirm == true && mounted) {
+                            
+                             if (mounted) context.go('/login');
+                          }
+                        },
+                      ),
+                    ],
+                  ),
+                  
+                  const SizedBox(height: 20),
                 ],
-              ),
-
-              const SizedBox(height: 30),
-
-              // --- GROUP 1: Personal Info ---
-              _buildMenuContainer(
-                children: [
-                  _buildMenuItem(
-                    icon: Icons.person_outline,
-                    iconColor: Colors.orange,
-                    title: "Personal Info",
-                    onTap: () {},
-                  ),
-                  _buildMenuItem(
-                    icon: Icons.map_outlined,
-                    iconColor: Colors.purple,
-                    title: "Addresses",
-                    onTap: () {},
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 20),
-
-              // --- GROUP 2: Cart, Favorite, etc ---
-              _buildMenuContainer(
-                children: [
-                  _buildMenuItem(
-                    icon: Icons.shopping_bag_outlined,
-                    iconColor: Colors.blue,
-                    title: "Cart",
-                    onTap: () {},
-                  ),
-                  _buildMenuItem(
-                    icon: Icons.favorite_border,
-                    iconColor: Colors.purpleAccent,
-                    title: "Favourite",
-                    onTap: () {},
-                  ),
-                  _buildMenuItem(
-                    icon: Icons.notifications_none,
-                    iconColor: Colors.orangeAccent,
-                    title: "Notifications",
-                    onTap: () {},
-                  ),
-                  _buildMenuItem(
-                    icon: Icons.credit_card,
-                    iconColor: Colors.blueAccent,
-                    title: "Payment Method",
-                    onTap: () {},
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 20),
-
-              // --- GROUP 3: General ---
-              _buildMenuContainer(
-                children: [
-                  _buildMenuItem(
-                    icon: Icons.help_outline,
-                    iconColor: Colors.deepOrange,
-                    title: "FAQs",
-                    onTap: () {},
-                  ),
-                  _buildMenuItem(
-                    icon: Icons.rate_review_outlined,
-                    iconColor: Colors.teal,
-                    title: "User Reviews",
-                    onTap: () {},
-                  ),
-                  _buildMenuItem(
-                    icon: Icons.settings_outlined,
-                    iconColor: Colors.indigo,
-                    title: "Settings",
-                    onTap: () {},
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 20),
-
-              // --- GROUP 4: Log Out ---
-              _buildMenuContainer(
-                children: [
-                  _buildMenuItem(
-                    icon: Icons.logout,
-                    iconColor: Colors.red,
-                    title: "Log Out",
-                    isLogOut: true, // Opsional: untuk styling khusus jika mau
-                    onTap: () {
-                      // Logika logout, misal kembali ke login
-                      context.go('/login');
-                    },
-                  ),
-                ],
-              ),
-              
-              const SizedBox(height: 20),
-            ],
+              );
+            }
           ),
         ),
       ),
@@ -185,7 +200,7 @@ class BuyerProfilePage extends StatelessWidget {
           color: Colors.grey.shade100,
           shape: BoxShape.circle,
         ),
-        child: Icon(icon, color: MyApp.textDark, size: 20),
+        child: Icon(icon, color: Colors.black87, size: 20),
       ),
     );
   }
@@ -194,12 +209,10 @@ class BuyerProfilePage extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 8),
       decoration: BoxDecoration(
-        color: Colors.grey.shade50, // Warna background abu-abu sangat muda
+        color: Colors.grey.shade50,
         borderRadius: BorderRadius.circular(16),
       ),
-      child: Column(
-        children: children,
-      ),
+      child: Column(children: children),
     );
   }
 
@@ -218,7 +231,7 @@ class BuyerProfilePage extends StatelessWidget {
         decoration: BoxDecoration(
           color: Colors.white,
           shape: BoxShape.circle,
-          boxShadow: [ // Bayangan halus untuk icon
+          boxShadow: [
             BoxShadow(
               color: Colors.grey.withOpacity(0.1),
               spreadRadius: 1,
@@ -233,7 +246,7 @@ class BuyerProfilePage extends StatelessWidget {
         style: const TextStyle(
           fontSize: 16,
           fontWeight: FontWeight.w500,
-          color: MyApp.textDark,
+          color: Colors.black87,
         ),
       ),
       trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 16, color: Colors.grey),

@@ -14,7 +14,11 @@ class AuthViewModel with ChangeNotifier {
 
   UserModel? _currentUser;
   UserModel? get currentUser => _currentUser;
-
+  String? _errorMessage;
+  String? get errorMessage => _errorMessage;
+  UserModel? _user;
+  UserModel? get user => _user;
+  
   void setLoading(bool value) {
     _isLoading = value;
     notifyListeners();
@@ -173,6 +177,21 @@ class AuthViewModel with ChangeNotifier {
       debugPrint("Logout error: $e");
     } finally {
       setLoading(false);
+    }
+  }
+
+  Future<void> loadUserProfile() async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      _user = await _authRepo.fetchCurrentUser();
+    } catch (e) {
+      _errorMessage = e.toString();
+    } finally {
+      _isLoading = false;
+      notifyListeners();
     }
   }
 }

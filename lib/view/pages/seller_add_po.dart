@@ -1,8 +1,10 @@
 part of 'pages.dart';
-// Import your MapPickerPage and other necessary files here
+
+// Jangan lupa import ini di file pages.dart atau di atas file ini
+// import 'package:image_picker/image_picker.dart';
+// import 'dart:io';
 
 // --- HELPER CLASS ---
-// This holds the controllers for A SINGLE pickup location card
 class PickupFormController {
   final TextEditingController placeName = TextEditingController();
   final TextEditingController desc = TextEditingController();
@@ -38,29 +40,18 @@ class _SellerAddPreOrderPageState extends State<SellerAddPreOrderPage> {
   final Color fieldBackground = const Color(0xFFF5F5F5);
   final Color textGrey = const Color(0xFF757575);
 
-  // --- 1. PRE-ORDER DETAILS CONTROLLERS ---
+  // --- CONTROLLERS ---
   final TextEditingController _poNameController = TextEditingController();
   final TextEditingController _openDateController = TextEditingController();
   final TextEditingController _openTimeController = TextEditingController();
   final TextEditingController _closeDateController = TextEditingController();
   final TextEditingController _closeTimeController = TextEditingController();
 
-  // --- 2. DYNAMIC PICKUP LOCATIONS ---
-  // Start with one empty form
   final List<PickupFormController> _pickupForms = [PickupFormController()];
+  final Map<int, TextEditingController> _menuStockControllers = {};
 
-  // --- 3. MENU SELECTION ---
-  // Store the IDs of selected menus
-  final Set<int> _selectedMenuIds = {};
-
-  @override
-  void initState() {
-    super.initState();
-    // Fetch menus when page loads
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<PreOrderViewModel>().fetchMenus();
-    });
-  }
+  // --- [BARU] STATE GAMBAR ---
+  File? _selectedImage;
 
   @override
   void dispose() {
@@ -69,13 +60,24 @@ class _SellerAddPreOrderPageState extends State<SellerAddPreOrderPage> {
     _openTimeController.dispose();
     _closeDateController.dispose();
     _closeTimeController.dispose();
-    for (var form in _pickupForms) {
-      form.dispose();
-    }
+    for (var form in _pickupForms) form.dispose();
+    for (var controller in _menuStockControllers.values) controller.dispose();
     super.dispose();
   }
 
-  // --- LOGIC: ADD/REMOVE PICKUP FORMS ---
+  // --- [BARU] LOGIC: PICK IMAGE ---
+  Future<void> _pickImage() async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+
+    if (pickedFile != null) {
+      setState(() {
+        _selectedImage = pickedFile as File?; // Simpan mentahannya (XFile)
+      });
+    }
+  }
+
+  // --- LOGIC: ADD/REMOVE FORMS ---
   void _addPickupForm() {
     setState(() {
       _pickupForms.add(PickupFormController());
@@ -85,13 +87,13 @@ class _SellerAddPreOrderPageState extends State<SellerAddPreOrderPage> {
   void _removePickupForm(int index) {
     if (_pickupForms.length > 1) {
       setState(() {
-        _pickupForms[index].dispose(); // Clean up controllers
+        _pickupForms[index].dispose();
         _pickupForms.removeAt(index);
       });
     }
   }
 
-  // --- LOGIC: DATE PICKERS ---
+  // --- LOGIC: DATE & TIME PICKER ---
   Future<void> _selectDate(TextEditingController controller) async {
     DateTime? picked = await showDatePicker(
       context: context,
@@ -100,89 +102,169 @@ class _SellerAddPreOrderPageState extends State<SellerAddPreOrderPage> {
       lastDate: DateTime(2030),
       builder: (context, child) {
         return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: ColorScheme.light(primary: primaryOrange),
-          ),
+          data: Theme.of(
+            context,
+          ).copyWith(colorScheme: ColorScheme.light(primary: primaryOrange)),
           child: child!,
         );
       },
     );
     if (picked != null) {
       setState(() {
-        controller.text = DateFormat('yyyy-MM-dd').format(picked);
+        controller.text =
+            "${picked.year}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}";
       });
     }
   }
 
-  // --- LOGIC: MAP PICKER ---
-  // We pass the controller specific to the card that clicked the button
+  Future<void> _selectTime(TextEditingController controller) async {
+    TimeOfDay? picked = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.now(),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(
+            context,
+          ).copyWith(colorScheme: ColorScheme.light(primary: primaryOrange)),
+          child: child!,
+        );
+      },
+    );
+    if (picked != null) {
+      final String formattedTime =
+          "${picked.hour.toString().padLeft(2, '0')}:${picked.minute.toString().padLeft(2, '0')}:00";
+      setState(() {
+        controller.text = formattedTime;
+      });
+    }
+  }
+
+  // --- LOGIC: MAP PICKER TERHUBUNG ---
   Future<void> _pickLocation(PickupFormController form) async {
-    // Navigate to MapPickerPage
-    /* final LatLng? result = await Navigator.push(
+    final result = await Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => const MapPickerPage()),
     );
 
-    if (result != null) {
+    if (result != null && result is LatLng) {
       setState(() {
         form.lat.text = result.latitude.toStringAsFixed(6);
         form.lng.text = result.longitude.toStringAsFixed(6);
       });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Lokasi dipilih: ${form.lat.text}, ${form.lng.text}"),
+        ),
+      );
     }
-    */
-    // Placeholder logic for now:
-    form.lat.text = "-7.2575";
-    form.lng.text = "112.7521";
+  }
+
+  // --- LOGIC: MENU CHECKBOX ---
+  void _toggleMenu(int menuId, bool? value) {
+    setState(() {
+      if (value == true) {
+        _menuStockControllers[menuId] = TextEditingController();
+      } else {
+        _menuStockControllers[menuId]?.dispose();
+        _menuStockControllers.remove(menuId);
+      }
+    });
   }
 
   // --- SUBMIT LOGIC ---
   Future<void> _submitForm() async {
-    if (_formKey.currentState!.validate()) {
-      if (_selectedMenuIds.isEmpty) {
+    if (!_formKey.currentState!.validate()) return;
+
+    if (_menuStockControllers.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Harap pilih minimal satu menu')),
+      );
+      return;
+    }
+
+    Map<int, int> menuStocksData = {};
+    for (var entry in _menuStockControllers.entries) {
+      final stockText = entry.value.text;
+      if (stockText.isEmpty ||
+          int.tryParse(stockText) == null ||
+          int.parse(stockText) <= 0) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Please select at least one menu')),
+          const SnackBar(content: Text('Stok menu tidak boleh kosong atau 0')),
         );
         return;
       }
+      menuStocksData[entry.key] = int.parse(stockText);
+    }
 
-      // 1. Prepare PreOrder Model
+    for (var form in _pickupForms) {
+      if (form.lat.text.isEmpty || form.lng.text.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Harap pilih lokasi pada peta untuk semua titik pickup',
+            ),
+          ),
+        );
+        return;
+      }
+    }
+
+    try {
       final newPO = PreOrderModel(
         name: _poNameController.text,
         orderDate: _openDateController.text,
         orderTime: _openTimeController.text,
         closeOrderDate: _closeDateController.text,
         closeOrderTime: _closeTimeController.text,
-        // restaurantId handled in VM usually
+        status: 'OPEN',
+        currentQuota: 0,
+        targetQuota: 100,
+        // Image URL akan diisi oleh ViewModel setelah upload
       );
 
-      // 2. Prepare List of Pickups
       List<PoPickupModel> pickups = _pickupForms.map((form) {
         return PoPickupModel(
-          preOrderId: 0, // Temp ID, will be assigned by DB
+          preOrderId: 0,
           address: form.placeName.text,
           detailAddress: form.desc.text,
           date: form.date.text,
           startTime: form.start.text,
           endTime: form.end.text,
-          latitude: double.tryParse(form.lat.text),
-          longitude: double.tryParse(form.lng.text),
+          latitude: double.tryParse(form.lat.text) ?? 0.0,
+          longitude: double.tryParse(form.lng.text) ?? 0.0,
         );
       }).toList();
 
-      // 3. Prepare List of Menu IDs
-      List<int> menuIds = _selectedMenuIds.toList();
-
-      // 4. Send to ViewModel
       final vm = context.read<PreOrderViewModel>();
+// Konversi XFile ke File untuk dikirim ke ViewModel
+      File? imageFileToSend;
+      if (_selectedImage != null) {
+        imageFileToSend = File(_selectedImage!.path);
+      }
+      // [UPDATE] KIRIM FILE GAMBAR KE VIEWMODEL
       final success = await vm.createFullPreOrder(
         preOrder: newPO,
         pickups: pickups,
-        menuIds: menuIds,
+        menuStocks: menuStocksData,
+        imageFile: imageFileToSend, // <--- Kirim file di sini
       );
 
       if (success && mounted) {
-        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Pre-Order Berhasil Dibuat!')),
+        );
+        Navigator.pop(context, true);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Gagal membuat Pre-Order. Cek koneksi.'),
+          ),
+        );
       }
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error: $e')));
     }
   }
 
@@ -193,7 +275,10 @@ class _SellerAddPreOrderPageState extends State<SellerAddPreOrderPage> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text("Create Pre-Order", style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+        title: const Text(
+          "Buat Jadwal Pre-Order",
+          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+        ),
         backgroundColor: Colors.white,
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.black),
@@ -205,93 +290,241 @@ class _SellerAddPreOrderPageState extends State<SellerAddPreOrderPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // --- SECTION 1: PRE-ORDER DETAILS ---
-              _buildSectionTitle("1. Pre-Order Details"),
-              _buildTextField("Pre-Order Name", _poNameController, Icons.bookmark_border),
-              const SizedBox(height: 10),
-              Row(
-                children: [
-                  Expanded(child: _buildDateField("Open Date", _openDateController)),
-                  const SizedBox(width: 10),
-                  Expanded(child: _buildTextField("Time (HH:mm:ss)", _openTimeController, Icons.access_time)),
-                ],
+              // --- [BARU] IMAGE PICKER UI ---
+              Center(
+                child: GestureDetector(
+                  onTap: _pickImage,
+                  child: Container(
+                    width: double.infinity,
+                    height: 180,
+                    decoration: BoxDecoration(
+                      color: Colors.grey[200],
+                      borderRadius: BorderRadius.circular(15),
+                      border: Border.all(color: Colors.grey[400]!),
+                      image: _selectedImage != null
+                          ? DecorationImage(
+                              image: kIsWeb
+                                  ? NetworkImage(_selectedImage!.path) // KHUSUS WEB
+                                  : FileImage(File(_selectedImage!.path)) as ImageProvider, // KHUSUS MOBILE
+                              fit: BoxFit.cover,
+                            )
+                          : null,
+                    ),
+                    child: _selectedImage == null
+                        ? Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.add_a_photo,
+                                size: 40,
+                                color: Colors.grey[600],
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                "Upload Poster PO",
+                                style: TextStyle(
+                                  color: Colors.grey[600],
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                "(Wajib agar menarik)",
+                                style: TextStyle(
+                                  color: Colors.grey[500],
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
+                          )
+                        : Stack(
+                            children: [
+                              Positioned(
+                                right: 10,
+                                top: 10,
+                                child: Container(
+                                  padding: const EdgeInsets.all(4),
+                                  decoration: const BoxDecoration(
+                                    color: Colors.white,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(
+                                    Icons.edit,
+                                    color: Colors.black,
+                                    size: 20,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                  ),
+                ),
               ),
-              const SizedBox(height: 10),
-              Row(
-                children: [
-                  Expanded(child: _buildDateField("Close Date", _closeDateController)),
-                  const SizedBox(width: 10),
-                  Expanded(child: _buildTextField("Time (HH:mm:ss)", _closeTimeController, Icons.access_time)),
-                ],
-              ),
-
               const SizedBox(height: 30),
 
-              // --- SECTION 2: DYNAMIC PICKUP LOCATIONS ---
-              _buildSectionTitle("2. Pickup Locations"),
+              _buildSectionTitle("1. Detail Pre-Order"),
+              _buildTextField(
+                "Nama Batch PO",
+                _poNameController,
+                Icons.bookmark_border,
+              ),
+              const SizedBox(height: 10),
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildDateField("Tgl Buka", _openDateController),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: _buildTimeField("Jam Buka", _openTimeController),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildDateField("Tgl Tutup", _closeDateController),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: _buildTimeField("Jam Tutup", _closeTimeController),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 30),
+
+              _buildSectionTitle("2. Lokasi Pengambilan"),
               ListView.separated(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 itemCount: _pickupForms.length,
                 separatorBuilder: (c, i) => const SizedBox(height: 20),
-                itemBuilder: (context, index) {
-                  return _buildPickupCard(index);
-                },
+                itemBuilder: (context, index) => _buildPickupCard(index),
               ),
-              
-              // Add New Pickup Button
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 16.0),
                 child: Center(
                   child: TextButton.icon(
                     onPressed: _addPickupForm,
                     icon: Icon(Icons.add_circle, color: primaryOrange),
-                    label: Text("Add Another Pickup Location", style: TextStyle(color: primaryOrange)),
+                    label: Text(
+                      "Tambah Lokasi Lain",
+                      style: TextStyle(color: primaryOrange),
+                    ),
                   ),
                 ),
               ),
-
               const SizedBox(height: 10),
 
-              // --- SECTION 3: MENU SELECTION ---
-              _buildSectionTitle("3. Select Menus"),
-              const Text("Select the menus available for this Pre-Order:", style: TextStyle(color: Colors.grey)),
-              const SizedBox(height: 10),
-              
-              viewModel.isLoading 
-              ? const Center(child: CircularProgressIndicator())
-              : viewModel.menus.isEmpty 
-                  ? const Text("No menus found.")
+              _buildSectionTitle("3. Pilih Menu & Stok"),
+              const Text(
+                "Centang menu dan isi jumlah stock yang tersedia:",
+                style: TextStyle(color: Colors.grey),
+              ),
+              const SizedBox(height: 15),
+
+              viewModel.isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : viewModel.menus.isEmpty
+                  ? const Text(
+                      "Belum ada menu.",
+                      style: TextStyle(color: Colors.red),
+                    )
                   : Container(
                       decoration: BoxDecoration(
                         border: Border.all(color: Colors.grey.shade300),
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: Column(
-                        children: viewModel.menus.map((menu) {
-                          final isSelected = _selectedMenuIds.contains(menu.menuId);
-                          return CheckboxListTile(
-                            activeColor: primaryOrange,
-                            title: Text(menu.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-                            subtitle: Text("Rp ${menu.price}"),
-                            value: isSelected,
-                            onChanged: (bool? value) {
-                              setState(() {
-                                if (value == true) {
-                                  _selectedMenuIds.add(menu.menuId!);
-                                } else {
-                                  _selectedMenuIds.remove(menu.menuId);
-                                }
-                              });
-                            },
+                      child: ListView.separated(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: viewModel.menus.length,
+                        separatorBuilder: (c, i) => const Divider(height: 1),
+                        itemBuilder: (context, index) {
+                          final menu = viewModel.menus[index];
+                          final isSelected = _menuStockControllers.containsKey(
+                            menu.menuId,
                           );
-                        }).toList(),
+                          return Container(
+                            color: isSelected
+                                ? primaryOrange.withOpacity(0.05)
+                                : Colors.transparent,
+                            child: Column(
+                              children: [
+                                CheckboxListTile(
+                                  activeColor: primaryOrange,
+                                  title: Text(
+                                    menu.name,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  subtitle: Text("Rp ${menu.price}"),
+                                  value: isSelected,
+                                  onChanged: (val) =>
+                                      _toggleMenu(menu.menuId!, val),
+                                ),
+                                if (isSelected)
+                                  Padding(
+                                    padding: const EdgeInsets.fromLTRB(
+                                      50,
+                                      0,
+                                      20,
+                                      15,
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        const Text(
+                                          "Stok: ",
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 10),
+                                        Expanded(
+                                          child: TextFormField(
+                                            controller:
+                                                _menuStockControllers[menu
+                                                    .menuId],
+                                            keyboardType: TextInputType.number,
+                                            decoration: InputDecoration(
+                                              hintText: "0",
+                                              isDense: true,
+                                              contentPadding:
+                                                  const EdgeInsets.symmetric(
+                                                    horizontal: 10,
+                                                    vertical: 8,
+                                                  ),
+                                              border: OutlineInputBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(8),
+                                              ),
+                                              filled: true,
+                                              fillColor: Colors.white,
+                                            ),
+                                            validator: (val) =>
+                                                isSelected &&
+                                                    (val == null || val.isEmpty)
+                                                ? "Wajib isi"
+                                                : null,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 10),
+                                        const Text(
+                                          "Porsi",
+                                          style: TextStyle(color: Colors.grey),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          );
+                        },
                       ),
                     ),
-
               const SizedBox(height: 40),
-
-              // --- SUBMIT BUTTON ---
               SizedBox(
                 width: double.infinity,
                 height: 55,
@@ -299,11 +532,20 @@ class _SellerAddPreOrderPageState extends State<SellerAddPreOrderPage> {
                   onPressed: viewModel.isLoading ? null : _submitForm,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: primaryOrange,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
                   child: viewModel.isLoading
-                    ? const CircularProgressIndicator(color: Colors.white)
-                    : const Text("Create Pre-Order", style: TextStyle(fontSize: 18, color: Colors.white, fontWeight: FontWeight.bold)),
+                      ? const CircularProgressIndicator(color: Colors.white)
+                      : const Text(
+                          "Buat Jadwal Pre-Order",
+                          style: TextStyle(
+                            fontSize: 18,
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                 ),
               ),
               const SizedBox(height: 40),
@@ -314,42 +556,65 @@ class _SellerAddPreOrderPageState extends State<SellerAddPreOrderPage> {
     );
   }
 
-  // --- WIDGET BUILDERS ---
-
+  // --- WIDGET HELPER METHODS ---
   Widget _buildSectionTitle(String title) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
-      child: Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black87)),
+      child: Text(
+        title,
+        style: const TextStyle(
+          fontSize: 18,
+          fontWeight: FontWeight.bold,
+          color: Colors.black87,
+        ),
+      ),
     );
   }
 
-  Widget _buildTextField(String label, TextEditingController controller, IconData icon, {bool readOnly = false, VoidCallback? onTap}) {
+  Widget _buildTextField(
+    String label,
+    TextEditingController controller,
+    IconData icon, {
+    bool readOnly = false,
+    VoidCallback? onTap,
+  }) {
     return TextFormField(
       controller: controller,
       readOnly: readOnly,
       onTap: onTap,
-      validator: (v) => v!.isEmpty ? 'Required' : null,
+      validator: (v) => v!.isEmpty ? 'Wajib diisi' : null,
       decoration: InputDecoration(
         labelText: label,
         labelStyle: TextStyle(color: textGrey, fontSize: 13),
         prefixIcon: Icon(icon, color: primaryOrange, size: 20),
         filled: true,
         fillColor: fieldBackground,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: BorderSide.none,
+        ),
         contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 10),
       ),
     );
   }
 
-  Widget _buildDateField(String label, TextEditingController controller) {
-    return _buildTextField(
-      label, 
-      controller, 
-      Icons.calendar_today, 
-      readOnly: true, 
-      onTap: () => _selectDate(controller)
-    );
-  }
+  Widget _buildDateField(String label, TextEditingController controller) =>
+      _buildTextField(
+        label,
+        controller,
+        Icons.calendar_today,
+        readOnly: true,
+        onTap: () => _selectDate(controller),
+      );
+
+  Widget _buildTimeField(String label, TextEditingController controller) =>
+      _buildTextField(
+        label,
+        controller,
+        Icons.access_time,
+        readOnly: true,
+        onTap: () => _selectTime(controller),
+      );
 
   Widget _buildPickupCard(int index) {
     final form = _pickupForms[index];
@@ -360,50 +625,54 @@ class _SellerAddPreOrderPageState extends State<SellerAddPreOrderPage> {
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: primaryOrange.withOpacity(0.3)),
         boxShadow: [
-          BoxShadow(color: Colors.grey.withOpacity(0.1), blurRadius: 5, offset: const Offset(0,3))
-        ]
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            blurRadius: 5,
+            offset: const Offset(0, 3),
+          ),
+        ],
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          _buildTextField("Nama Tempat", form.placeName, Icons.storefront),
+          const SizedBox(height: 10),
+          _buildTextField("Detail Alamat", form.desc, Icons.description),
+          const SizedBox(height: 10),
+          _buildDateField("Tgl Pickup", form.date),
+          const SizedBox(height: 10),
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text("Location #${index + 1}", style: TextStyle(color: primaryOrange, fontWeight: FontWeight.bold)),
-              if (_pickupForms.length > 1)
-                IconButton(
-                  icon: const Icon(Icons.remove_circle_outline, color: Colors.red),
-                  onPressed: () => _removePickupForm(index),
-                )
+              Expanded(child: _buildTimeField("Mulai", form.start)),
+              const SizedBox(width: 8),
+              Expanded(child: _buildTimeField("Selesai", form.end)),
             ],
           ),
           const SizedBox(height: 10),
-          _buildTextField("Place Name", form.placeName, Icons.storefront),
-          const SizedBox(height: 10),
-          _buildTextField("Description", form.desc, Icons.description),
-          const SizedBox(height: 10),
           Row(
             children: [
-              Expanded(child: _buildDateField("Date", form.date)),
+              Expanded(
+                child: _buildTextField(
+                  "Lat",
+                  form.lat,
+                  Icons.location_on,
+                  readOnly: true,
+                ),
+              ),
               const SizedBox(width: 8),
-              Expanded(child: _buildTextField("Start", form.start, Icons.access_time)),
-              const SizedBox(width: 8),
-              Expanded(child: _buildTextField("End", form.end, Icons.timer)),
-            ],
-          ),
-          const SizedBox(height: 10),
-          // Coordinates Row
-          Row(
-            children: [
-              Expanded(child: _buildTextField("Lat", form.lat, Icons.location_on, readOnly: true)),
-              const SizedBox(width: 8),
-              Expanded(child: _buildTextField("Lng", form.lng, Icons.location_on, readOnly: true)),
+              Expanded(
+                child: _buildTextField(
+                  "Lng",
+                  form.lng,
+                  Icons.location_on,
+                  readOnly: true,
+                ),
+              ),
               IconButton(
                 icon: const Icon(Icons.map, color: Colors.blue),
                 onPressed: () => _pickLocation(form),
-              )
+              ),
             ],
-          )
+          ),
         ],
       ),
     );

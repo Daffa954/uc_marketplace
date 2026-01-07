@@ -6,6 +6,29 @@ class AuthRepository {
   final SupabaseClient _supabase = Supabase.instance.client;
 
   // --- LOGIN ---
+
+  Future<UserModel?> fetchCurrentUser() async {
+    try {
+      final user = _supabase.auth.currentUser;
+      if (user == null) return null; // Belum login
+
+      // Ambil data detail dari tabel 'users' (atau 'profiles')
+      // Menggunakan .maybeSingle() agar return null jika data tidak ditemukan (bukan error)
+      final response = await _supabase
+          .from('users') 
+          .select()
+          .eq('auth_id', user.id) 
+          .maybeSingle();
+
+      if (response == null) return null;
+
+      return UserModel.fromJson(response);
+    } catch (e) {
+      throw Exception('Gagal mengambil profil user: $e');
+    }
+  }
+
+  
   Future<UserModel> login(String email, String password) async {
     try {
       // 1. Login ke Supabase Auth

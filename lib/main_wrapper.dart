@@ -21,28 +21,28 @@ class BuyerMainWrapper extends StatelessWidget {
         selectedItemColor: Colors.white,
         unselectedItemColor: Colors.white54,
         type: BottomNavigationBarType.fixed,
-       items: const [
-        BottomNavigationBarItem(
-          icon: Icon(Icons.home_outlined),
-          activeIcon: Icon(Icons.home),
-          label: 'Home',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.timer_outlined),
-          activeIcon: Icon(Icons.timer),
-          label: 'History',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.chat_bubble_outline),
-          activeIcon: Icon(Icons.chat_bubble),
-          label: 'Chat',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.person_outline),
-          activeIcon: Icon(Icons.person),
-          label: 'Profile',
-        ),
-      ],
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home_outlined),
+            activeIcon: Icon(Icons.home),
+            label: 'Home',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.timer_outlined),
+            activeIcon: Icon(Icons.timer),
+            label: 'History',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.chat_bubble_outline),
+            activeIcon: Icon(Icons.chat_bubble),
+            label: 'Chat',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person_outline),
+            activeIcon: Icon(Icons.person),
+            label: 'Profile',
+          ),
+        ],
       ),
     );
   }
@@ -72,6 +72,7 @@ class SellerMainWrapper extends StatelessWidget {
             label: 'Dashboard',
           ),
           BottomNavigationBarItem(icon: Icon(Icons.chat), label: 'Chat'),
+          BottomNavigationBarItem(icon: Icon(Icons.chat), label: 'History'),
           BottomNavigationBarItem(
             icon: Icon(Icons.settings),
             label: 'Pengaturan',

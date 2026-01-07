@@ -116,6 +116,14 @@ class AppRouter {
               ),
             ],
           ),
+           StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/buyer/chat',
+                builder: (context, state) => const HistoryOrderPage(),
+              ),
+            ],
+          ),
           StatefulShellBranch(
             routes: [
               GoRoute(

@@ -32,6 +32,7 @@ dependencies:
   cupertino_icons: ^1.0.8
   dotenv: ^4.2.0
   faker: ^2.2.0
+  fl_chart: ^1.1.1
   flutter:
     sdk: flutter
   flutter_dotenv: ^6.0.0
@@ -47,9 +48,9 @@ dependencies:
   midtrans: ^0.1.0
   midtrans_snap: ^1.0.1
   provider: ^6.1.5+1
+  qr_flutter: ^4.1.0
   supabase_flutter: ^2.10.3
-  webview_flutter: ^4.4.2  # Pastikan ini ada
-  qr_flutter: ^4.1.0  # WAJIB: Untuk mengubah string jadi gambar QR
+  webview_flutter: ^4.4.2
 
 dev_dependencies:
   flutter_lints: ^5.0.0

@@ -21,19 +21,29 @@ class RestaurantRepository {
 
   Future<List<RestaurantModel>> getRestaurantsByOwner() async {
     try {
-      final user = _supabase.auth.currentUser;
-      if (user == null) return [];
+      // 1. Ambil ID User yang sedang login (UUID)
+      final String? userId = _supabase.auth.currentUser?.id;
 
+      if (userId == null) {
+        // Jika null, kembalikan list kosong biar ViewModel menangani logic "Empty State"
+        print("Repo Error: User ID null (Belum login)");
+        return [];
+      }
+
+      // 2. Query ke Supabase
+      // GANTI 'owner_id' dengan nama kolom yang benar di tabel 'restaurants' Anda
+      // (Bisa jadi namanya 'user_id', 'seller_id', atau 'owner_id')
       final response = await _supabase
           .from('restaurants')
           .select()
-          .eq('owner_id', user.id); // Pastikan kolom di DB adalah 'owners_id'
+          .eq('owner_id', userId); // <--- PASTIKAN NAMA KOLOM INI BENAR
 
-      return (response as List)
-          .map((e) => RestaurantModel.fromJson(e))
-          .toList();
+      final List<dynamic> data = response;
+      return data.map((json) => RestaurantModel.fromJson(json)).toList();
+
     } catch (e) {
-      throw Exception("Gagal mengambil daftar restoran: $e");
+      print("Repo Error Fetch: $e");
+      return []; // Return kosong jika error, jangan throw agar app tidak crash
     }
   }
 

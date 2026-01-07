@@ -1,93 +1,3 @@
-// import 'dart:async';
-// import 'package:flutter/material.dart';
-// import 'package:go_router/go_router.dart';
-// import 'package:uc_marketplace/view/pages/pages.dart';
-// import 'package:uc_marketplace/view/pages/seller_edit_add_menu.dart';
-
-// void main() {
-//   runApp(MyApp());
-// }
-
-// class MyApp extends StatelessWidget {
-//   MyApp({super.key});
-//   static const Color primaryOrange = Color(0xFFFF7F27);
-//   static const Color textDark = Color(0xFF1F2937);
-//   static const Color textGrey = Color(0xFF9CA3AF);
-//   static const Color backgroundGrey = Color(0xFFF9FAFB);
-//   // KONFIGURASI GO ROUTER
-//   final GoRouter _router = GoRouter(
-//     initialLocation: '/', // Mulai dari Splash Screen
-//     routes: [
-//       // 1. Splash Screen
-//       GoRoute(path: '/', builder: (context, state) => const SplashScreen()),
-//       // 2. Login Page
-//       GoRoute(path: '/login', builder: (context, state) => const LoginPage()),
-//       // 3. Register Page
-//       GoRoute(
-//         path: '/register',
-//         builder: (context, state) => const RegisterPage(),
-//       ),
-//       // 4. Home Page (Placeholder setelah login)
-//       GoRoute(path: '/home', builder: (context, state) => const HomeBuyer()),
-//       GoRoute(path: '/search', builder: (context, state) => const SearchPage()),
-//       GoRoute(
-//         path: '/buyerProfile',
-//         builder: (context, state) => const BuyerProfilePage(),
-//       ),
-
-//       // SELLER
-//       StatefulShellRoute.indexedStack(
-//         builder: (context, state, navigationShell) {
-//           return SellerMainPage(navigationShell: navigationShell);
-//         },
-//         branches: [
-//           // Dashboard Branch
-//           StatefulShellBranch(
-//             routes: [
-//               GoRoute(
-//                 path: '/seller/home',
-//                 builder: (context, state) => const SellerDashboardPage(),
-//                 routes: [
-//                   // --- NEW ROUTE HERE ---
-//                   // This handles both "Add" (no extra) and "Edit" (passed extra)
-//                   GoRoute(
-//                     path: 'menu-form', // Full path: /seller/home/menu-form
-//                     parentNavigatorKey:
-//                         null, // Set this if you want to hide/show bottom bar specifically
-//                     builder: (context, state) {
-//                       // Retrieve the object passed via extra
-//                       // Ensure MenuItem is imported
-//                       final item = state.extra as MenuItem?;
-//                       return AddEditMenuPage(item: item);
-//                     },
-//                   ),
-//                 ],
-//               ),
-//             ],
-//           ),
-//         ],
-//       ),
-//     ],
-//   );
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return MaterialApp.router(
-//       routerConfig: _router,
-//       debugShowCheckedModeBanner: false,
-//       theme: ThemeData(
-//         fontFamily: 'Poppins',
-//         colorScheme: ColorScheme.fromSeed(seedColor: Colors.green),
-//         useMaterial3: true,
-//         inputDecorationTheme: InputDecorationTheme(
-//           border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-//           filled: true,
-//           fillColor: Colors.grey[100],
-//         ),
-//       ),
-//     );
-//   }
-// }
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:provider/provider.dart';
@@ -142,10 +52,16 @@ class MyApp extends StatelessWidget {
           create: (context) => PreOrderViewModel(
             authVM: Provider.of<AuthViewModel>(context, listen: false),
           ),
-          update: (context, authVM, previousOrderVM) =>
-              // Setiap kali AuthVM berubah (misal login/logout),
-              // OrderVM mendapat instance AuthVM terbaru
-              PreOrderViewModel(authVM: authVM),
+          update: (context, authVM, previousPreOrderVM) {
+            // 1. Ambil instance lama (previous)
+            final vm = previousPreOrderVM ?? PreOrderViewModel(authVM: authVM);
+
+            // 2. Update AuthVM-nya dengan yang terbaru
+            vm.updateAuth(authVM);
+
+            // 3. Kembalikan instance yang sama (bukan buat baru)
+            return vm;
+          },
         ),
         ChangeNotifierProvider(create: (_) => BroadcastViewModel()),
         ChangeNotifierProxyProvider<AuthViewModel, OrderViewModel>(

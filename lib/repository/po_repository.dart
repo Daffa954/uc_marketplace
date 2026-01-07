@@ -1,3 +1,6 @@
+import 'dart:io';
+
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uc_marketplace/model/model.dart';
 
@@ -167,12 +170,39 @@ class PreOrderRepository {
     }
   }
 
+ Future<String?> uploadPreOrderImage(File imageFile) async {
+    try {
+      // 1. Buat nama file unik (agar tidak tertimpa)
+      // Contoh: po_1709823123.jpg
+      final fileName = 'po_${DateTime.now().millisecondsSinceEpoch}.jpg';
+      
+      // 2. Tentukan Path di dalam Bucket
+      final path = 'covers/$fileName'; 
+
+      // 3. Upload ke Bucket 'preorder-images'
+      await _supabase.storage.from('preorder-images').upload(
+        path,
+        imageFile,
+        fileOptions: const FileOptions(cacheControl: '3600', upsert: false),
+      );
+
+      // 4. Ambil Public URL agar bisa disimpan di Database
+      final imageUrl = _supabase.storage.from('preorder-images').getPublicUrl(path);
+      
+      return imageUrl;
+    } catch (e) {
+      print("Error uploading image: $e");
+      return null; // Return null jika gagal upload
+    }
+  }
+
   Future<void> createPreOrderMenu(PreOrderMenuModel poMenu) async {
     try {
       // Manual map creation is often safer for simple join tables
       final data = {
         'pre_order_id': poMenu.preOrderId,
         'menu_id': poMenu.menuId,
+        'stock': poMenu.stock,
       };
 
       await _supabase.from('pre_order_menus').insert(data);
@@ -240,5 +270,41 @@ class PreOrderRepository {
         .eq('status', 'OPEN');
 
     return List<Map<String, dynamic>>.from(response);
+  }
+  // file: repository/po_repository.dart
+
+  Future<List<Map<String, dynamic>>> getWeeklySalesData(
+    int restaurantId,
+  ) async {
+    try {
+      // 1. Tentukan rentang waktu (7 hari lalu s/d sekarang)
+      final now = DateTime.now();
+      final sevenDaysAgo = now.subtract(
+        const Duration(days: 6),
+      ); // 6 hari lalu + hari ini = 7 hari
+
+      // Format tanggal ke string ISO agar bisa dibaca Supabase
+      // Mengambil awal hari (00:00:00) dari 7 hari lalu
+      final startDate = DateTime(
+        sevenDaysAgo.year,
+        sevenDaysAgo.month,
+        sevenDaysAgo.day,
+      );
+
+      // 2. Query ke Supabase
+      final response = await _supabase
+          .from('pre_orders')
+          .select('order_date, total_amount')
+          .eq('restaurant_id', restaurantId)
+          .gte('order_date', startDate.toIso8601String())
+          // Opsional: Filter hanya status tertentu
+          // .eq('status', 'completed')
+          .order('order_date', ascending: true);
+
+      return List<Map<String, dynamic>>.from(response);
+    } catch (e) {
+      debugPrint("Error fetching sales data: $e");
+      return [];
+    }
   }
 }

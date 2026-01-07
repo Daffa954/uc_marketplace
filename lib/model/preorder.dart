@@ -14,6 +14,7 @@ class PreOrderModel {
   final int currentQuota;     // Jumlah yang sudah dipesan (misal: 2)
   final int targetQuota;      // Target maksimal (misal: 20)
   final String? image;        // URL Gambar Banner PO
+
   PreOrderModel({
     this.preOrderId,
     this.restaurantId,
@@ -67,7 +68,7 @@ class PreOrderModel {
     String? orderDate,
     String? orderTime,
     String? closeOrderDate,
-    String? closeOrderTime,
+    String? closeOrderTime, String? image,
   }) {
     return PreOrderModel(
       preOrderId: preOrderId ?? this.preOrderId,
