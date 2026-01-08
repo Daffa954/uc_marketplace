@@ -13,7 +13,32 @@ class OrderRepository {
       throw Exception("Gagal update status: $e");
     }
   }
+// ... fungsi yang sudah ada ...
 
+  // [BARU] Ambil pesanan berdasarkan ID Pre-Order tertentu
+  Future<List<OrderModel>> fetchOrdersByPoId(int preOrderId) async {
+    try {
+      final response = await _supabase
+          .from('orders')
+          .select('''
+            *,
+            order_items (
+              *,
+              menus (name, image)
+            ),
+            users (name, email, phone) 
+          ''') // Kita ambil data pembeli juga (nama, hp)
+          .eq('pre_order_id', preOrderId)
+          // Hanya ambil yang sudah dibayar ke atas (abaikan PENDING)
+          .neq('status', 'PENDING') 
+          .order('created_at', ascending: false);
+
+      final List<dynamic> data = response;
+      return data.map((json) => OrderModel.fromJson(json)).toList();
+    } catch (e) {
+      throw Exception('Gagal mengambil pesanan PO: $e');
+    }
+  }
   Future<int> createOrder({
     required OrderModel order,
     required List<OrderItemModel> items,

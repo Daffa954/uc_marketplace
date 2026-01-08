@@ -357,4 +357,19 @@ class PreOrderRepository {
       return [];
     }
   }
+  Future<List<PreOrderModel>> fetchPoByOwner(String ownerUuid) async {
+    try {
+      // Join ke tabel restaurants untuk filter by owner_id
+      final response = await _supabase
+          .from('pre_orders')
+          .select('*, restaurants!inner(owner_id)')
+          .eq('restaurants.owner_id', ownerUuid)
+          .order('created_at', ascending: false);
+
+      return (response as List).map((e) => PreOrderModel.fromJson(e)).toList();
+    } catch (e) {
+      debugPrint("Error fetching Owner POs: $e");
+      return [];
+    }
+  }
 }

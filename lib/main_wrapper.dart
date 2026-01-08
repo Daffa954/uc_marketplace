@@ -73,8 +73,12 @@ class SellerMainWrapper extends StatelessWidget {
           ),
           BottomNavigationBarItem(icon: Icon(Icons.chat), label: 'Chat'),
           BottomNavigationBarItem(icon: Icon(Icons.chat), label: 'History'),
-          BottomNavigationBarItem(icon: Icon(Icons.list_alt), label: 'Produk'),
+// [BARU] Index 2: Pesanan
           BottomNavigationBarItem(
+            icon: Icon(Icons.receipt_long_outlined),
+            activeIcon: Icon(Icons.receipt_long),
+            label: 'Pesanan',
+          ),          BottomNavigationBarItem(
             icon: Icon(Icons.settings),
             label: 'Pengaturan',
           ),

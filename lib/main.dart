@@ -13,6 +13,7 @@ import 'package:uc_marketplace/viewmodel/order_viewmodel.dart';
 import 'package:uc_marketplace/viewmodel/payment_viewmodel.dart';
 import 'package:uc_marketplace/viewmodel/pre_order_viewmodel.dart';
 import 'package:uc_marketplace/viewmodel/search_viewmodel.dart';
+import 'package:uc_marketplace/viewmodel/seller_order_viewmodel.dart';
 
 import 'shared/shared.dart'; // Import Router Anda
 
@@ -78,6 +79,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => AddEditMenuViewModel()),
         ChangeNotifierProvider(create: (_) => HistoryViewModel()),
         ChangeNotifierProvider(create: (_) => ChatViewModel()),
+        ChangeNotifierProvider(create: (_) => SellerOrderViewModel()), // Tambahkan ini
       ],
       child: MaterialApp.router(
         routerConfig: AppRouter.router, // Menggunakan Router yang sudah dipisah

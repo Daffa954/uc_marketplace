@@ -6,7 +6,9 @@ import 'package:uc_marketplace/model/model.dart';
 import 'package:uc_marketplace/view/pages/buyer_rating_page.dart';
 import 'package:uc_marketplace/view/pages/pages.dart';
 import 'package:uc_marketplace/view/pages/seller_menu_detail_page.dart';
+import 'package:uc_marketplace/view/pages/seller_order_management_page.dart';
 import 'package:uc_marketplace/view/pages/seller_po_detail_page.dart';
+import 'package:uc_marketplace/view/pages/seller_po_list_page.dart';
 import 'package:uc_marketplace/view/widgets/widgets.dart';
 import 'package:uc_marketplace/viewmodel/detail_viewmodel.dart';
 
@@ -262,8 +264,19 @@ class AppRouter {
           StatefulShellBranch(
             routes: [
               GoRoute(
-                path: '/seller/chats',
-                builder: (context, state) => const Center(child: Text("Chat")),
+                path: '/seller/orders', // Root path untuk tab Pesanan
+                builder: (context, state) => const SellerPoListPage(), // Halaman List PO
+                routes: [
+                  // Sub-route: Detail Order per PO
+                  GoRoute(
+                    path: 'manage/:poId', // /seller/orders/manage/123
+                    parentNavigatorKey: rootNavigatorKey, // Menutupi bottom bar
+                    builder: (context, state) {
+                      final po = state.extra as PreOrderModel;
+                      return SellerOrderManagementPage(preOrder: po);
+                    },
+                  ),
+                ],
               ),
             ],
           ),
