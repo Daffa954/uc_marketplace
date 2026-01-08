@@ -191,8 +191,8 @@ final int finalTotal = _uiTotalPrice.toInt();
                       // [PERBAIKAN] Tambahkan errorBuilder
                       child: Image.network(
                         imgUrl,
-                        width: 50,
-                        height: 50,
+                        width: 150,
+                        height: 150,
                         fit: BoxFit.cover,
                         errorBuilder: (context, error, stackTrace) {
                           return Container(
@@ -269,7 +269,7 @@ final int finalTotal = _uiTotalPrice.toInt();
                     children: [
                       _buildOptionBtn("Pick up"),
                       const SizedBox(width: 8),
-                      _buildOptionBtn("Delivery"),
+                      
                     ],
                   ),
                   const SizedBox(height: 20),
@@ -303,8 +303,8 @@ final int finalTotal = _uiTotalPrice.toInt();
                             // [PERBAIKAN] Tambahkan errorBuilder
                             child: Image.network(
                               locationImage,
-                              width: 70,
-                              height: 70,
+                              width: 170,
+                              height: 170,
                               fit: BoxFit.cover,
                               errorBuilder: (context, error, stackTrace) {
                                 return Container(
@@ -536,19 +536,55 @@ final int finalTotal = _uiTotalPrice.toInt();
 
   Widget _buildCartItemCard(int index) {
     final item = _cartItems[index];
+    
+    // Pastikan URL valid, jika null/kosong pakai placeholder
+    String imageUrl = item.menu.image ?? "";
+    if (imageUrl.isEmpty) {
+      imageUrl = "https://placehold.co/100x100?text=No+Img";
+    }
+
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // --- GAMBAR MENU (DIPERBAIKI) ---
         ClipRRect(
           borderRadius: BorderRadius.circular(12),
           child: Image.network(
-            item.menu.image ?? "https://placehold.co/100x100",
+            imageUrl,
             width: 80,
             height: 80,
             fit: BoxFit.cover,
+            // [FIX] Handle error jika URL mati / CORS block
+            errorBuilder: (context, error, stackTrace) {
+              return Container(
+                width: 80, 
+                height: 80, 
+                color: Colors.grey[300],
+                child: const Icon(Icons.fastfood, color: Colors.grey),
+              );
+            },
+            // [FIX] Tampilkan loading saat gambar sedang diambil
+            loadingBuilder: (context, child, loadingProgress) {
+              if (loadingProgress == null) return child;
+              return Container(
+                width: 80, height: 80,
+                color: Colors.grey[200],
+                child: Center(
+                  child: CircularProgressIndicator(
+                    value: loadingProgress.expectedTotalBytes != null
+                        ? loadingProgress.cumulativeBytesLoaded / 
+                          loadingProgress.expectedTotalBytes!
+                        : null,
+                    strokeWidth: 2,
+                  ),
+                ),
+              );
+            },
           ),
         ),
+        
         const SizedBox(width: 12),
+        // ... Sisa kode Text/Column tetap sama ...
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -559,10 +595,7 @@ final int finalTotal = _uiTotalPrice.toInt();
                   Expanded(
                     child: Text(
                       item.menu.name,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                      ),
+                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -572,15 +605,12 @@ final int finalTotal = _uiTotalPrice.toInt();
                       _cartItems.removeAt(index);
                       if (_cartItems.isEmpty) context.pop();
                     }),
-                    child: const Icon(
-                      Icons.cancel,
-                      color: Colors.red,
-                      size: 20,
-                    ),
+                    child: const Icon(Icons.cancel, color: Colors.red, size: 20),
                   ),
                 ],
               ),
               const SizedBox(height: 4),
+              // Convert Enum/String type to readable text
               Text(
                 item.menu.type.toString().split('.').last,
                 style: const TextStyle(color: Colors.grey, fontSize: 10),
@@ -596,21 +626,12 @@ final int finalTotal = _uiTotalPrice.toInt();
                 children: [
                   InkWell(
                     onTap: () => _decrement(index),
-                    child: const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 8),
-                      child: Icon(Icons.remove, size: 18),
-                    ),
+                    child: const Padding(padding: EdgeInsets.symmetric(horizontal: 8), child: Icon(Icons.remove, size: 18)),
                   ),
-                  Text(
-                    "${item.quantity}",
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
+                  Text("${item.quantity}", style: const TextStyle(fontWeight: FontWeight.bold)),
                   InkWell(
                     onTap: () => _increment(index),
-                    child: const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 8),
-                      child: Icon(Icons.add, size: 18),
-                    ),
+                    child: const Padding(padding: EdgeInsets.symmetric(horizontal: 8), child: Icon(Icons.add, size: 18)),
                   ),
                 ],
               ),
