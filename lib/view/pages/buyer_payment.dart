@@ -35,14 +35,27 @@ class _PaymentPageState extends State<PaymentPage> {
   }
 
   // Fungsi Cek Status Otomatis
+  // Fungsi Cek Status Otomatis
   void _startPolling(PaymentViewModel vm) {
+    debugPrint("--- START POLLING (Cek tiap 5 detik) ---");
+    
     _pollingTimer = Timer.periodic(const Duration(seconds: 5), (timer) async {
-      // Panggil API Cek Status Midtrans
+      debugPrint("--- [Tick] Cek Status ke-${timer.tick} ---");
+      
+      // Panggil API
       final status = await MidtransRepository().getTransactionStatus(widget.order.orderId.toString());
       
+      debugPrint("--- [Tick] Hasil di UI: $status ---");
+
+      // Cek Logic
       if (status == 'settlement' || status == 'capture') {
+        debugPrint("--- PEMBAYARAN SUKSES TERDETEKSI! Stopping Timer... ---");
         timer.cancel(); // Stop cek jika sudah sukses
         if (mounted) _handleSuccessPayment();
+      } else if (status == 'pending') {
+        debugPrint("--- Masih Pending, lanjut polling... ---");
+      } else if (status == 'error') {
+        debugPrint("--- Terjadi Error (404/Network), cek koneksi/ID... ---");
       }
     });
   }
