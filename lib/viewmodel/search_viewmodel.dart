@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:uc_marketplace/model/model.dart';
+import 'package:uc_marketplace/repository/po_repository.dart';
 import 'package:uc_marketplace/repository/search_repository.dart';
 
 class SearchViewModel with ChangeNotifier {
   final _searchRepo = SearchRepository();
-
+final _poRepo = PreOrderRepository(); // Gunakan repository yang benar
   // --- STATE LOADING & STATUS ---
   bool _isLoading = false;
   bool get isLoading => _isLoading;
@@ -110,52 +111,69 @@ class SearchViewModel with ChangeNotifier {
   }
 
   // --- ACTIONS 2: LOCATION SEARCH (PoPickup) ---
-  Future<void> searchByLocation(LatLng userPickedLocation) async {
-    _isSearching = true;
-    _isLocationResult = true; // Tandai ini hasil lokasi
+  Future<void> searchByLocation(LatLng userLocation) async {
     _isLoading = true;
-    _searchQuery = "📍 Lokasi Terpilih";
+    _isSearching = true; // Aktifkan mode searching
+    _isLocationResult = true; // Tandai ini hasil lokasi (bukan text)
+    _pickupResults = []; // Reset hasil lama
     notifyListeners();
 
     try {
-      const Distance distanceCalculator = Distance();
+      // 1. Ambil Semua PO yang Aktif beserta Lokasi Pickup-nya
+      // Pastikan fungsi ini ada di Repo dan melakukan join pickup
+      final allPOs = await _poRepo.getActivePreOrdersWithLocation(); 
+      
+      // Karena `getActivePreOrdersWithLocation` mungkin mengembalikan List<Map> atau List<PreOrderModel>,
+      // Kita perlu memastikan data pickup-nya terambil.
+      
+      final Distance distanceCalc = const Distance();
       List<Map<String, dynamic>> tempResults = [];
 
-      // Loop data master _allPoPickups yang sudah di-load di awal
-      for (var pickup in _allPoPickups) {
-        // Validasi koordinat (pastikan tidak null)
-        if (pickup.latitude == null || pickup.longitude == null) continue;
+      // 2. Loop semua PO
+      for (var poData in allPOs) {
+        // Parsing manual jika kembalian repo berupa Map, sesuaikan dengan Repo Anda
+        // Anggaplah poData['po_pickups'] adalah List pickup
+        List pickups = poData['po_pickups'] ?? []; 
 
-        // Hitung jarak
-        double distanceInMeters = distanceCalculator.as(
-          LengthUnit.Meter,
-          userPickedLocation,
-          LatLng(pickup.latitude!, pickup.longitude!),
-        );
+        for (var pickup in pickups) {
+          // Cek koordinat valid
+          double? lat = pickup['latitude'];
+          double? lng = pickup['longitude'];
 
-        // Filter Radius 10KM
-        if (distanceInMeters <= 10000) {
-          tempResults.add({
-            'data': pickup,
-            'distance': distanceInMeters,
-          });
+          if (lat != null && lng != null) {
+            // Hitung Jarak (dalam Meter)
+            double distance = distanceCalc.as(
+              LengthUnit.Meter,
+              userLocation,
+              LatLng(lat, lng)
+            );
+debugPrint("Jarak User ke PO: ${distance.toStringAsFixed(2)} meter");
+            // Jika jarak dekat (misal < 10km atau 10.000 meter)
+            if (distance <= 10000) {
+              // Masukkan ke list sementara
+              // Kita butuh object PoPickupModel untuk UI
+              final pickupObj = PoPickupModel.fromJson(pickup);
+              
+              // [TRICK] Simpan jarak di properti pickupObj jika bisa, atau mapping manual
+              // Disini kita masukkan ke list temp dulu untuk disort
+              tempResults.add({
+                'distance': distance,
+                'pickup': pickupObj,
+                'po_data': poData // Simpan data PO induknya jika perlu
+              });
+            }
+          }
         }
       }
 
-      // Sorting berdasarkan jarak terdekat
-      tempResults.sort(
-        (a, b) => (a['distance'] as double).compareTo(b['distance'] as double),
-      );
+      // 3. Sorting dari Terdekat
+      tempResults.sort((a, b) => (a['distance'] as double).compareTo(b['distance'] as double));
 
-      // Mapping kembali ke object model
-      _pickupResults = tempResults.map((e) => e['data'] as PoPickupModel).toList();
-      
-      // Kosongkan hasil PreOrder text agar UI bersih
-      _preOrderResults = [];
+      // 4. Masukkan ke State UI
+      _pickupResults = tempResults.map((e) => e['pickup'] as PoPickupModel).toList();
 
     } catch (e) {
-      debugPrint("Error calculating nearest location: $e");
-      _pickupResults = [];
+      debugPrint("Error location search: $e");
     } finally {
       _isLoading = false;
       notifyListeners();

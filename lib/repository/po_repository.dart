@@ -7,7 +7,21 @@ import 'package:uc_marketplace/model/model.dart';
 
 class PreOrderRepository {
   final SupabaseClient _supabase = Supabase.instance.client;
+Future<List<Map<String, dynamic>>> getActivePreOrdersWithLocation() async {
+    try {
+      final now = DateTime.now().toIso8601String();
+      
+      final response = await _supabase
+          .from('pre_orders')
+          .select('*, po_pickup!po_pickup_pre_order_id_fkey1(*)') // [FIX] Update disini juga
+          .gte('close_order_date', now);
 
+      return List<Map<String, dynamic>>.from(response);
+    } catch (e) {
+      debugPrint("Error fetch location data: $e");
+      return [];
+    }
+  }
   // --- 1. AMBIL LIST BATCH PRE-ORDER ---
   Future<List<PreOrderModel>> getActivePreOrders() async {
     try {
@@ -309,18 +323,7 @@ class PreOrderRepository {
   }
 
   // Ambil PO yang OPEN beserta data Pickup-nya (untuk ambil latitude/longitude)
-  Future<List<Map<String, dynamic>>> getActivePreOrdersWithLocation() async {
-    // Kita perlu join manual atau select nested
-    // Asumsi: Kita ambil PO yang OPEN, lalu nanti di loop ambil pickup-nya
-    // Atau gunakan select nested Supabase:
-
-    final response = await _supabase
-        .from('pre_orders')
-        .select('*, po_pickups(*)') // Select PO beserta detail pickup-nya
-        .eq('status', 'OPEN');
-
-    return List<Map<String, dynamic>>.from(response);
-  }
+  
   // file: repository/po_repository.dart
 
   Future<List<Map<String, dynamic>>> getWeeklySalesData(

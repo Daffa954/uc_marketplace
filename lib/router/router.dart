@@ -280,16 +280,16 @@ class AppRouter {
               ),
             ],
           ),
-          // Branch Settings
-          StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: '/seller/settings',
-                builder: (context, state) =>
-                    const Center(child: Text("Halaman Setting")),
-              ),
-            ],
-          ),
+          // // Branch Settings
+          // StatefulShellBranch(
+          //   routes: [
+          //     GoRoute(
+          //       path: '/seller/settings',
+          //       builder: (context, state) =>
+          //           const Center(child: Text("Halaman Setting")),
+          //     ),
+          //   ],
+          // ),
         ],
       ),
     ],

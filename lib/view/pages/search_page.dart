@@ -20,15 +20,17 @@ class _SearchPageState extends State<SearchPage> {
   Widget build(BuildContext context) {
     final searchVM = Provider.of<SearchViewModel>(context);
 
-    // Sinkronisasi controller visual
+    // Sinkronisasi teks controller dengan state searchVM
     if (_searchController.text != searchVM.searchQuery &&
         searchVM.isSearching &&
-        !searchVM.isLocationResult) { // Jangan update teks jika sedang mode lokasi
+        !searchVM.isLocationResult) {
       _searchController.text = searchVM.searchQuery;
+      // Pindahkan kursor ke akhir teks agar user tidak bingung saat ketik
       _searchController.selection = TextSelection.fromPosition(
         TextPosition(offset: _searchController.text.length),
       );
     } else if (searchVM.isLocationResult && _searchController.text.isEmpty) {
+       // Jika hasil lokasi tapi text kosong, beri label
        _searchController.text = "📍 Lokasi Terpilih";
     }
 
@@ -40,6 +42,7 @@ class _SearchPageState extends State<SearchPage> {
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Color(0xFF1F2937)),
           onPressed: () {
+            // Reset state saat keluar
             searchVM.clearSearch();
             _searchController.clear();
             context.pop();
@@ -58,7 +61,7 @@ class _SearchPageState extends State<SearchPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 1. INPUT PENCARIAN
+            // 1. INPUT PENCARIAN (SEARCH BAR)
             Container(
               decoration: BoxDecoration(
                 color: Colors.grey[100],
@@ -66,10 +69,12 @@ class _SearchPageState extends State<SearchPage> {
               ),
               child: TextField(
                 controller: _searchController,
-                autofocus: false, // Ubah false agar tidak popup keyboard terus
+                autofocus: false, 
                 textInputAction: TextInputAction.search,
+                // Trigger search saat tombol enter ditekan
                 onSubmitted: (value) => searchVM.onSearch(value),
                 onChanged: (value) {
+                   // Reset jika user menghapus semua teks
                    if (value.isEmpty) searchVM.clearSearch();
                 },
                 decoration: InputDecoration(
@@ -93,12 +98,12 @@ class _SearchPageState extends State<SearchPage> {
             ),
             const SizedBox(height: 24),
             
-            // Tombol "Cari Terdekat" hanya muncul jika belum searching
+            // TOMBOL "CARI TERDEKAT" (Hanya muncul jika belum mode searching)
             if (!searchVM.isSearching) _buildNearMeButton(searchVM),
 
             const SizedBox(height: 16),
 
-            // 2. SWITCH VIEW
+            // 2. KONTEN (LOADING / HASIL / SUGGESTION)
             if (searchVM.isLoading)
               const Center(
                 child: Padding(
@@ -107,9 +112,9 @@ class _SearchPageState extends State<SearchPage> {
                 ),
               )
             else if (searchVM.isSearching)
-              _buildSearchResults(searchVM) // Logic Baru Ada Disini
+              _buildSearchResults(searchVM) // Tampilkan Hasil
             else
-              _buildInitialContent(searchVM),
+              _buildInitialContent(searchVM), // Tampilkan Saran
           ],
         ),
       ),
@@ -120,15 +125,19 @@ class _SearchPageState extends State<SearchPage> {
   Widget _buildNearMeButton(SearchViewModel vm) {
     return GestureDetector(
       onTap: () async {
+        // Buka halaman peta untuk pilih lokasi
         final LatLng? result = await Navigator.push(
           context,
           MaterialPageRoute(builder: (context) => const MapPickerPage()),
         );
 
         if (result != null) {
+          // Panggil ViewModel untuk cari PO terdekat dari lokasi yang dipilih
           vm.searchByLocation(result);
+          
+          // Update text field agar user tahu lokasi terpilih
           _searchController.text = "📍 Lokasi: ${result.latitude.toStringAsFixed(4)}, ${result.longitude.toStringAsFixed(4)}";
-          FocusScope.of(context).unfocus();
+          FocusScope.of(context).unfocus(); // Tutup keyboard
         }
       },
       child: Container(
@@ -164,12 +173,12 @@ class _SearchPageState extends State<SearchPage> {
     );
   }
 
-  // --- VIEW 1: INITIAL CONTENT (Suggestion) ---
+  // --- VIEW 1: INITIAL CONTENT (Saran & Riwayat) ---
   Widget _buildInitialContent(SearchViewModel vm) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Recent Keywords
+        // Recent Keywords (Riwayat Pencarian)
         if (vm.recentKeywords.isNotEmpty) ...[
           const Text("Recent Keywords", style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
           const SizedBox(height: 12),
@@ -195,7 +204,7 @@ class _SearchPageState extends State<SearchPage> {
           const SizedBox(height: 24),
         ],
 
-        // Suggested PreOrders
+        // Suggested PreOrders (Rekomendasi)
         const Text("Suggested PO", style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
         const SizedBox(height: 12),
         if (vm.suggestedPreOrders.isEmpty)
@@ -211,50 +220,49 @@ class _SearchPageState extends State<SearchPage> {
               return _buildSuggestedItem(item);
             },
           ),
-
-        const SizedBox(height: 24),
-
-        // New Items (Menus)
-        
       ],
     );
   }
 
-  // Widget Kecil Suggested (PreOrder)
+  // Widget Item Saran
   Widget _buildSuggestedItem(PreOrderModel item) {
-    return Row(
-      children: [
-        ClipRRect(
-          borderRadius: BorderRadius.circular(8),
-          child: Image.network(
-            "https://placehold.co/100x100/png?text=${Uri.encodeComponent(item.name)}",
-            width: 60, height: 60, fit: BoxFit.cover,
+    return InkWell(
+      onTap: () => context.push('/buyer/home/po-detail', extra: item),
+      child: Row(
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: Image.network(
+              item.image ?? "https://placehold.co/100x100/png?text=PO",
+              width: 60, height: 60, fit: BoxFit.cover,
+              errorBuilder: (ctx, err, stack) => Container(width: 60, height: 60, color: Colors.grey[200]),
+            ),
           ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(item.name, style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 15)),
-              const SizedBox(height: 4),
-              Row(
-                children: [
-                  const Icon(Icons.calendar_today, size: 14, color: Colors.orange),
-                  const SizedBox(width: 4),
-                  Text(item.orderDate ?? "-", style: const TextStyle(color: Colors.grey, fontSize: 12)),
-                ],
-              ),
-            ],
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(item.name, style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 15)),
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    const Icon(Icons.calendar_today, size: 14, color: Colors.orange),
+                    const SizedBox(width: 4),
+                    Text(item.orderDate ?? "-", style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                  ],
+                ),
+              ],
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
-  // --- VIEW 2: SEARCH RESULTS (LOGIC UTAMA) ---
+  // --- VIEW 2: SEARCH RESULTS (Hasil Pencarian) ---
   Widget _buildSearchResults(SearchViewModel vm) {
-    // 1. Tentukan List mana yang dipakai (PreOrder atau Pickup)
+    // Tentukan list mana yang ditampilkan: Pickup (Lokasi) atau PreOrder (Text)
     final bool isEmpty = vm.isLocationResult 
         ? vm.pickupResults.isEmpty 
         : vm.preOrderResults.isEmpty;
@@ -299,7 +307,6 @@ class _SearchPageState extends State<SearchPage> {
           itemCount: count,
           separatorBuilder: (context, index) => const SizedBox(height: 16),
           itemBuilder: (context, index) {
-            // SWITCH CARD: Tampilkan card sesuai tipe data
             if (vm.isLocationResult) {
               return _buildPickupCard(vm.pickupResults[index]);
             } else {
@@ -311,11 +318,10 @@ class _SearchPageState extends State<SearchPage> {
     );
   }
 
-// --- CARD 1: UNTUK PRE-ORDER (Text Search) ---
+  // --- CARD 1: CARD UNTUK HASIL TEXT SEARCH (PreOrderModel) ---
   Widget _buildPreOrderCard(PreOrderModel item) {
     return GestureDetector(
       onTap: () {
-        // Navigasi ke detail PO dengan mengirim data model 'item'
         context.push('/buyer/home/po-detail', extra: item);
       },
       child: Container(
@@ -323,62 +329,40 @@ class _SearchPageState extends State<SearchPage> {
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
-            BoxShadow(
-              color: Colors.grey.withOpacity(0.1),
-              spreadRadius: 2,
-              blurRadius: 8,
-              offset: const Offset(0, 4),
-            ),
+            BoxShadow(color: Colors.grey.withOpacity(0.1), spreadRadius: 2, blurRadius: 8, offset: const Offset(0, 4)),
           ],
         ),
         child: Row(
           children: [
-            // Image Section
+            // Gambar PO
             ClipRRect(
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(16),
-                bottomLeft: Radius.circular(16),
-              ),
+              borderRadius: const BorderRadius.only(topLeft: Radius.circular(16), bottomLeft: Radius.circular(16)),
               child: Image.network(
-                "https://placehold.co/200x200/png?text=${Uri.encodeComponent(item.name)}",
-                width: 100,
-                height: 100,
-                fit: BoxFit.cover,
+                item.image ?? "https://placehold.co/200x200/png?text=PO",
+                width: 100, height: 100, fit: BoxFit.cover,
+                errorBuilder: (ctx, err, stack) => Container(width: 100, height: 100, color: Colors.grey[200], child: const Icon(Icons.broken_image)),
               ),
             ),
             const SizedBox(width: 12),
-            // Content Section
+            // Info PO
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.symmetric(vertical: 12.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // Rating (Dummy)
                     const Row(
                       children: [
                         Icon(Icons.star, color: Colors.amber, size: 16),
                         SizedBox(width: 4),
-                        Text("4.5",
-                            style: TextStyle(
-                                fontWeight: FontWeight.bold, fontSize: 12)),
+                        Text("4.5", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
                       ],
                     ),
                     const SizedBox(height: 4),
-                    Text(
-                      item.name,
-                      style: const TextStyle(
-                          fontSize: 16, fontWeight: FontWeight.bold),
-                    ),
-                    Text(
-                      "PO Date: ${item.orderDate}",
-                      style: const TextStyle(fontSize: 12, color: Colors.grey),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    Text(
-                      "Time: ${item.orderTime ?? '-'}",
-                      style: const TextStyle(fontSize: 12, color: Colors.blue),
-                    ),
+                    Text(item.name, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold), maxLines: 1, overflow: TextOverflow.ellipsis),
+                    Text("Tutup PO: ${item.closeOrderDate ?? '-'}", style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                    Text("Target: ${item.targetQuota} porsi", style: const TextStyle(fontSize: 12, color: Colors.blue)),
                   ],
                 ),
               ),
@@ -391,57 +375,64 @@ class _SearchPageState extends State<SearchPage> {
     );
   }
 
-// --- CARD 2: UNTUK PO PICKUP (Location Search) ---
-  // Tampilan dibuat IDENTIK dengan _buildPreOrderCard
+  // --- CARD 2: CARD UNTUK HASIL LOCATION SEARCH (PoPickupModel) ---
   Widget _buildPickupCard(PoPickupModel item) {
-    // Ambil foto pertama jika ada
+    // Ambil gambar pertama pickup, atau placeholder
     String imageUrl = (item.photoLocation != null && item.photoLocation!.isNotEmpty)
-        ? item.photoLocation!.first
+        ? item.photoLocation!.first.toString()
         : "https://placehold.co/200x200/png?text=Pickup";
 
     return GestureDetector(
-      onTap: () {
-        // NOTE: Pastikan Anda memiliki objek PreOrderModel yang terkait dengan item ini.
-        // Jika route /po-detail memerlukan PreOrderModel, Anda mungkin perlu 
-        // mengambilnya dari ViewModel berdasarkan item.preOrderId.
-        // context.push('/buyer/home/po-detail', extra: associatedPreOrder);
+      onTap: () async {
+        // [FIX NAVIGASI] Ambil detail PO Induk sebelum pindah halaman
+        showDialog(context: context, barrierDismissible: false, builder: (_) => const Center(child: CircularProgressIndicator(color: Color(0xFFFF7F27))));
         
-        print("Tapped on Pickup Point #${item.preOrderId}");
+        try {
+          // Cari PO Induk dari list active di Repo/ViewModel
+          // Menggunakan repo instance baru atau existing provider
+          // Disini kita pakai logic simpel: panggil repo langsung untuk cari by ID
+          final repo = PreOrderRepository(); // Pastikan import repo
+          final allPos = await repo.getActivePreOrders();
+          
+          if (context.mounted) {
+            Navigator.pop(context); // Tutup Loading
+            
+            try {
+              // Cari PO yang ID-nya cocok dengan preOrderId di pickup item
+              final targetPO = allPos.firstWhere((po) => po.preOrderId == item.preOrderId);
+              context.push('/buyer/home/po-detail', extra: targetPO);
+            } catch (e) {
+              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Detail PO tidak ditemukan")));
+            }
+          }
+        } catch (e) {
+          if (context.mounted) {
+            Navigator.pop(context);
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Gagal memuat data")));
+          }
+        }
       },
       child: Container(
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
-            BoxShadow(
-              color: Colors.grey.withOpacity(0.1),
-              spreadRadius: 2,
-              blurRadius: 8,
-              offset: const Offset(0, 4),
-            ),
+            BoxShadow(color: Colors.grey.withOpacity(0.1), spreadRadius: 2, blurRadius: 8, offset: const Offset(0, 4)),
           ],
         ),
         child: Row(
           children: [
+            // Gambar Pickup
             ClipRRect(
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(16),
-                bottomLeft: Radius.circular(16),
-              ),
+              borderRadius: const BorderRadius.only(topLeft: Radius.circular(16), bottomLeft: Radius.circular(16)),
               child: Image.network(
                 imageUrl,
-                width: 100,
-                height: 100,
-                fit: BoxFit.cover,
-                errorBuilder: (ctx, err, stack) => Container(
-                  width: 100,
-                  height: 100,
-                  color: Colors.grey[200],
-                  child: const Icon(Icons.location_on),
-                ),
+                width: 100, height: 100, fit: BoxFit.cover,
+                errorBuilder: (ctx, err, stack) => Container(width: 100, height: 100, color: Colors.grey[200], child: const Icon(Icons.location_on)),
               ),
             ),
             const SizedBox(width: 12),
+            // Info Pickup
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.symmetric(vertical: 12.0),
@@ -452,34 +443,14 @@ class _SearchPageState extends State<SearchPage> {
                       children: [
                         Icon(Icons.map, color: Colors.orange, size: 16),
                         SizedBox(width: 4),
-                        Text(
-                          "Pickup Point",
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 12,
-                            color: Colors.orange,
-                          ),
-                        ),
+                        Text("Pickup Point", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Colors.orange)),
                       ],
                     ),
                     const SizedBox(height: 4),
-                    Text(
-                      "Point #${item.preOrderId}",
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    Text(
-                      item.address ?? "Lokasi Jemputan",
-                      style: const TextStyle(fontSize: 12, color: Colors.grey),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    Text(
-                      "${item.startTime} - ${item.endTime}",
-                      style: const TextStyle(fontSize: 12, color: Colors.blue),
-                    ),
+                    // Tampilkan Alamat
+                    Text(item.address ?? "Lokasi Jemputan", style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold), maxLines: 2, overflow: TextOverflow.ellipsis),
+                    // Tampilkan Waktu
+                    Text("${item.date} • ${item.startTime} - ${item.endTime}", style: const TextStyle(fontSize: 12, color: Colors.blue)),
                   ],
                 ),
               ),
