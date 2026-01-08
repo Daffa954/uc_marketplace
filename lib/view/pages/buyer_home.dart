@@ -40,7 +40,7 @@ class HomeBodyContent extends StatelessWidget {
             const SizedBox(height: 24),
 
             // --- Kategori ---
-            const CategorySection(),
+            // const CategorySection(),
 
             const SizedBox(height: 24),
 

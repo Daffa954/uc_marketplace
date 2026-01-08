@@ -215,24 +215,7 @@ class _SearchPageState extends State<SearchPage> {
         const SizedBox(height: 24),
 
         // New Items (Menus)
-        const Text("New Menu Items", style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
-        const SizedBox(height: 12),
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          clipBehavior: Clip.none,
-          child: Row(
-            children: vm.newItems.map((menu) {
-              return PopularItemCard(
-                foodName: menu.name,
-                restaurantName: "Resto #${menu.restaurantId}", 
-                price: "Rp ${menu.price}",
-                rating: "4.5",
-                imageUrl: menu.image ?? "https://placehold.co/400x400/png?text=Menu",
-                tagLabel: menu.type.toString().split('.').last,
-              );
-            }).toList(),
-          ),
-        ),
+        
       ],
     );
   }
