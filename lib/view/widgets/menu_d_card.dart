@@ -77,14 +77,14 @@ class MenuItemDCard extends StatelessWidget {
                         color: Colors.grey[100],
                         borderRadius: BorderRadius.circular(4),
                       ),
-                      child: Text(
-                        menu.image!.length > 30 
-                          ? '${menu.image!.substring(0, 30)}...' 
-                          : menu.image!,
-                        style: const TextStyle(fontSize: 10, color: Colors.grey),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
+                      // child: Text(
+                      //   menu.image!.length > 30 
+                      //     ? '${menu.image!.substring(0, 30)}...' 
+                      //     : menu.image!,
+                      //   style: const TextStyle(fontSize: 10, color: Colors.grey),
+                      //   maxLines: 1,
+                      //   overflow: TextOverflow.ellipsis,
+                      // ),
                     )
                   else
                     Text(

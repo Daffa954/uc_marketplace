@@ -201,12 +201,16 @@ class _SellerDashboardPageState extends State<SellerDashboardPage> {
                                   },
                                   child: MenuItemDCard(
                                     menu: viewModel.menus[index],
-                                    onEdit: () {
-                                      // Edit tetap ke menu-form
-                                      context.go(
+                                    // [PERBAIKAN 1]: Gunakan push dan await untuk Edit juga
+                                    onEdit: () async {
+                                      final result = await context.push(
                                         '/seller/home/menu-form',
                                         extra: viewModel.menus[index],
                                       );
+                                      // Jika result == true (berhasil simpan/hapus), refresh data
+                                      if (result == true) {
+                                        _fetchData();
+                                      }
                                     },
                                   ),
                                 );
@@ -221,11 +225,21 @@ class _SellerDashboardPageState extends State<SellerDashboardPage> {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
+        // [PERBAIKAN 2]: Gunakan context.push dan await result
+        onPressed: () async {
           if (isPreOrderTab) {
-            context.go('/seller/home/add-preorder');
+            // Gunakan push agar bisa refresh jika Pre-Order berhasil dibuat
+            final result = await context.push('/seller/home/add-preorder');
+            if (result == true) {
+              _fetchData();
+            }
           } else {
-            context.go('/seller/home/menu-form', extra: null);
+            // Gunakan push agar bisa refresh jika Menu berhasil dibuat
+            final result =
+                await context.push('/seller/home/menu-form', extra: null);
+            if (result == true) {
+              _fetchData();
+            }
           }
         },
         backgroundColor: const Color(0xFFFF8C42),
@@ -235,7 +249,6 @@ class _SellerDashboardPageState extends State<SellerDashboardPage> {
     );
   }
 
-  // Widget Helper kecil bisa tetap disini atau dipisah juga
   Widget _buildEmptyState(bool isPreOrder) {
     return Padding(
       padding: const EdgeInsets.all(30),
