@@ -45,4 +45,19 @@ class HistoryViewModel with ChangeNotifier {
       notifyListeners();
     }
   }
+
+  Future<void> confirmOrderReceived(int orderId) async {
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      await _repo.completeOrder(orderId);
+      await fetchOrders(); // Refresh list otomatis setelah update
+    } catch (e) {
+      debugPrint("Error completing order: $e");
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
 }

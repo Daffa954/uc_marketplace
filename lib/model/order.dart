@@ -12,7 +12,7 @@ class OrderModel {
 // [TAMBAHAN PENTING]
   final String status; // 'PENDING', 'PAID', 'COMPLETED', 'CANCELLED'
   final String? createdAt; // Untuk history
-
+final PoPickupModel? pickup; // [BARU] Tambahkan field ini
 
 // --- [WAJIB TAMBAH UNTUK MIDTRANS] ---
   final String? paymentUrl;  // Menyimpan Link Redirect Midtrans
@@ -41,6 +41,7 @@ class OrderModel {
     this.shippingCost = 0,
     this.shippingAddress,
     this.shippingCourier,
+    this.pickup,
 
   });
 
@@ -64,6 +65,8 @@ class OrderModel {
       shippingCost: json['shipping_cost'] ?? 0,
       shippingAddress: json['shipping_address'],
       shippingCourier: json['shipping_courier'],
+      pickup: json['po_pickup'] != null ? PoPickupModel.fromJson(json['po_pickup']) : null,
+
     );
   }
 
@@ -81,6 +84,8 @@ class OrderModel {
     'shipping_cost': shippingCost,
     'shipping_address': shippingAddress,
     'shipping_courier': shippingCourier,
+    'po_pickup': pickup?.toJson(),
+
 
   };
 }

@@ -13,7 +13,7 @@ class OrderRepository {
       throw Exception("Gagal update status: $e");
     }
   }
-// ... fungsi yang sudah ada ...
+  // ... fungsi yang sudah ada ...
 
   // [BARU] Ambil pesanan berdasarkan ID Pre-Order tertentu
   Future<List<OrderModel>> fetchOrdersByPoId(int preOrderId) async {
@@ -30,7 +30,7 @@ class OrderRepository {
           ''') // Kita ambil data pembeli juga (nama, hp)
           .eq('pre_order_id', preOrderId)
           // Hanya ambil yang sudah dibayar ke atas (abaikan PENDING)
-          .neq('status', 'PENDING') 
+          .neq('status', 'PENDING')
           .order('created_at', ascending: false);
 
       final List<dynamic> data = response;
@@ -39,6 +39,7 @@ class OrderRepository {
       throw Exception('Gagal mengambil pesanan PO: $e');
     }
   }
+
   Future<int> createOrder({
     required OrderModel order,
     required List<OrderItemModel> items,
@@ -111,6 +112,40 @@ class OrderRepository {
       return data.map((json) => OrderModel.fromJson(json)).toList();
     } catch (e) {
       throw Exception('Gagal mengambil history: $e');
+    }
+  }
+
+  Future<List<OrderModel>> fetchOrders(String userId) async {
+    try {
+      final response = await _supabase
+          .from('orders')
+          .select('''
+            *,
+            order_items (
+              *,
+              menus (name, image, price)
+            ),
+            po_pickup (*)  
+          ''') // [PENTING] Tambahkan po_pickup (*) agar data lokasi terambil
+          .eq('user_id', userId)
+          .order('created_at', ascending: false);
+
+      final List<dynamic> data = response;
+      return data.map((json) => OrderModel.fromJson(json)).toList();
+    } catch (e) {
+      throw Exception('Gagal mengambil history: $e');
+    }
+  }
+
+  // 2. [BARU] Fungsi Konfirmasi Selesai
+  Future<void> completeOrder(int orderId) async {
+    try {
+      await _supabase
+          .from('orders')
+          .update({'status': 'COMPLETED'}) // Ubah status jadi Selesai
+          .eq('order_id', orderId);
+    } catch (e) {
+      throw Exception("Gagal menyelesaikan pesanan: $e");
     }
   }
 }
