@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:uc_marketplace/model/model.dart';
@@ -64,5 +66,36 @@ class PaymentViewModel with ChangeNotifier {
       _isLoading = false;
       notifyListeners();
     }
+  }
+
+  // ... kode sebelumnya ...
+  
+  Timer? _timer;
+
+  // Mulai pengecekan otomatis
+  void startPollingStatus(int orderId, VoidCallback onSuccess) {
+    _timer?.cancel(); // Reset timer lama jika ada
+    
+    // Cek setiap 5 detik
+    _timer = Timer.periodic(const Duration(seconds: 5), (timer) async {
+      final status = await _midtransRepo.getTransactionStatus(orderId.toString());
+      
+      // Jika status SUKSES (settlement / capture)
+      if (status == 'settlement' || status == 'capture') {
+        timer.cancel(); // Hentikan timer
+        onSuccess(); // Panggil callback sukses
+      }
+    });
+  }
+
+  // Hentikan timer saat keluar halaman
+  void stopPolling() {
+    _timer?.cancel();
+  }
+  
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
   }
 }

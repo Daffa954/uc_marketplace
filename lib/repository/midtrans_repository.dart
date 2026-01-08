@@ -11,8 +11,6 @@ class MidtransRepository {
   // Ganti dengan SERVER KEY SANDBOX Anda dari Dashboard Midtrans
   // Jangan lupa tambahkan titik dua (:) di akhir saat encode base64 nanti
 
- 
-
   static const String _coreApiUrl =
       "https://api.sandbox.midtrans.com/v2/charge";
 
@@ -108,6 +106,43 @@ class MidtransRepository {
           .eq('order_id', orderId);
     } catch (e) {
       rethrow;
+    }
+  }
+static const String _baseUrl = "https://api.sandbox.midtrans.com/v2";
+  // [BARU] Cek Status Transaksi Manual
+  Future<String> getTransactionStatus(String orderId) async {
+    String serverKey = Const.midtrans_key;
+   final url = Uri.parse('$_baseUrl/$orderId/status'); 
+
+  final String basicAuth = 'Basic ${base64Encode(utf8.encode('$serverKey:'))}';
+   
+
+    try {
+      final response = await http.get(
+        url,
+        headers: {'Accept': 'application/json', 'Authorization': basicAuth},
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        // transaction_status bisa: settlement, capture, pending, deny, expire, cancel
+        return data['transaction_status'] ?? 'unknown';
+      } else {
+        return 'error';
+      }
+    } catch (e) {
+      return 'error';
+    }
+  }
+
+  Future<void> updateOrderStatus(int orderId, String newStatus) async {
+    try {
+      await _supabase
+          .from('orders')
+          .update({'status': newStatus})
+          .eq('order_id', orderId);
+    } catch (e) {
+      throw Exception("Gagal update status: $e");
     }
   }
 }

@@ -11,8 +11,7 @@ class _HistoryOrderPageState extends State<HistoryOrderPage> {
   @override
   void initState() {
     super.initState();
-    // Fetch data saat halaman dibuka
-   WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<HistoryViewModel>(context, listen: false).fetchOrders();
     });
   }
@@ -56,7 +55,6 @@ class _HistoryOrderPageState extends State<HistoryOrderPage> {
     );
   }
 
-  // --- Widget List ---
   Widget _buildOrderList(List<OrderModel> orders, bool isActiveTab) {
     if (orders.isEmpty) {
       return Center(
@@ -91,7 +89,7 @@ class _HistoryOrderPageState extends State<HistoryOrderPage> {
   }
 }
 
-// --- Widget Kartu Pesanan ---
+// --- WIDGET KARTU PESANAN (PERBAIKAN) ---
 class _OrderCard extends StatelessWidget {
   final OrderModel order;
   const _OrderCard({required this.order});
@@ -99,30 +97,16 @@ class _OrderCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final currencyFormatter = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0);
-    
-    // Ambil item pertama sebagai highlight (Contoh: "Nasi Goreng & 2 menu lainnya")
-    String title = "Pesanan #${order.orderId}";
-    String subtitle = "Menunggu info menu...";
-    String imageUrl = "https://placehold.co/100x100";
 
-    if (order.items != null && order.items!.isNotEmpty) {
-      final firstItem = order.items!.first;
-      // Karena join di repo, kita akses menu via nested object jika model sudah support
-      // Atau gunakan logika sederhana ini:
-      title = firstItem.menu?.name ?? "Menu #${firstItem.menuId}";
-      
-      if (order.items!.length > 1) {
-        subtitle = "+ ${order.items!.length - 1} menu lainnya";
-      } else {
-        subtitle = "${firstItem.quantity} pcs";
-      }
-
-      if (firstItem.menu?.image != null) {
-        imageUrl = firstItem.menu!.image!;
-      }
+    // Format Tanggal
+    String dateStr = "-";
+    if (order.createdAt != null) {
+      try {
+        final date = DateTime.parse(order.createdAt!).toLocal();
+        dateStr = DateFormat('dd MMM yyyy, HH:mm').format(date);
+      } catch (_) {}
     }
 
-    // Warna status
     Color statusColor;
     String statusText;
     switch (order.status) {
@@ -135,107 +119,215 @@ class _OrderCard extends StatelessWidget {
       default: statusColor = Colors.grey; statusText = order.status;
     }
 
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [BoxShadow(color: Colors.grey.withOpacity(0.1), blurRadius: 5, offset: const Offset(0, 2))],
-      ),
-      child: Column(
-        children: [
-          // Header: Tanggal & Status
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                // Format tanggal pakai intl: DateFormat('dd MMM yyyy').format(...)
-                order.createdAt != null 
-                  ? order.createdAt!.substring(0, 10) 
-                  : "-",
-                style: const TextStyle(fontSize: 12, color: Colors.grey),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(color: statusColor.withOpacity(0.1), borderRadius: BorderRadius.circular(4)),
-                child: Text(statusText, style: TextStyle(color: statusColor, fontSize: 10, fontWeight: FontWeight.bold)),
-              )
-            ],
-          ),
-          const Divider(height: 24),
-          
-          // Body: Gambar & Nama Menu
-          Row(
-            children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: Image.network(imageUrl, width: 60, height: 60, fit: BoxFit.cover,
-                  errorBuilder: (ctx, _, __) => Container(width: 60, height: 60, color: Colors.grey[200], child: const Icon(Icons.fastfood, size: 20, color: Colors.grey)),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
+    // [FIX 1] Bungkus dengan InkWell agar seluruh kartu bisa diklik untuk detail
+    return InkWell(
+      onTap: () => _showDetailBottomSheet(context, currencyFormatter),
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.grey.shade100),
+          boxShadow: [
+            BoxShadow(color: Colors.grey.withOpacity(0.05), blurRadius: 5, offset: const Offset(0, 2))
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                    Text("Order #${order.orderId}", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
                     const SizedBox(height: 4),
-                    Text(subtitle, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                    Text(dateStr, style: const TextStyle(fontSize: 11, color: Colors.grey)),
+                  ],
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  decoration: BoxDecoration(
+                    color: statusColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(6)
+                  ),
+                  child: Text(statusText, style: TextStyle(color: statusColor, fontSize: 11, fontWeight: FontWeight.bold)),
+                )
+              ],
+            ),
+            const Divider(height: 24),
+
+            // Footer
+            Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text("Total Tagihan", style: TextStyle(fontSize: 11, color: Colors.grey)),
+                      Text(currencyFormatter.format(order.total),
+                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFFFF7F27))),
+                    ],
+                  ),
+                ),
+                
+                // [FIX 2] Tombol Detail Selalu Muncul (TextButton)
+                TextButton(
+                  onPressed: () => _showDetailBottomSheet(context, currencyFormatter),
+                  child: const Text("Detail", style: TextStyle(color: Colors.grey)),
+                ),
+
+                // Tombol Bayar (Hanya jika PENDING)
+                if (order.status == 'PENDING') ...[
+                  const SizedBox(width: 8),
+                  ElevatedButton(
+                    onPressed: () {
+                      context.pushNamed('payment',
+                          pathParameters: {'orderId': order.orderId.toString()},
+                          extra: order);
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFFF7F27),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
+                      minimumSize: const Size(0, 36)
+                    ),
+                    child: const Text("Bayar", style: TextStyle(color: Colors.white, fontSize: 13)),
+                  ),
+                ]
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // --- LOGIC BOTTOM SHEET (YANG PASTI MUNCUL) ---
+  void _showDetailBottomSheet(BuildContext context, NumberFormat currencyFormatter) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true, // Penting agar bisa full height
+      backgroundColor: Colors.transparent, // Transparan agar rounded corner terlihat
+      builder: (context) {
+        return Container(
+          height: MediaQuery.of(context).size.height * 0.75, // 75% Tinggi Layar
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: Column(
+            children: [
+              // Handle Bar (Garis kecil di atas)
+              const SizedBox(height: 12),
+              Container(
+                width: 40, height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              
+              // Header Sheet
+              Padding(
+                padding: const EdgeInsets.all(20),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text("Detail Order #${order.orderId}", style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                    IconButton(
+                      icon: const Icon(Icons.close),
+                      onPressed: () => Navigator.pop(context),
+                    )
                   ],
                 ),
               ),
+              const Divider(height: 1),
+
+              // List Items (Scrollable)
+              Expanded(
+                child: (order.items == null || order.items!.isEmpty)
+                    ? const Center(child: Text("Tidak ada detail item."))
+                    : ListView.separated(
+                        padding: const EdgeInsets.all(20),
+                        itemCount: order.items!.length,
+                        separatorBuilder: (c, i) => const Divider(height: 24),
+                        itemBuilder: (context, index) {
+                          final item = order.items![index];
+                          // Validasi harga
+                          final double itemPrice = double.tryParse(item.price.toString()) ?? 0;
+                          final int itemQty = item.quantity ?? 1;
+                          final double itemTotal = itemPrice * itemQty;
+
+                          return Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // Gambar Menu
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(8),
+                                child: Image.network(
+                                  item.menu?.image ?? "https://placehold.co/100x100", 
+                                  width: 60, height: 60, fit: BoxFit.cover,
+                                  errorBuilder: (ctx, _, __) => Container(width: 60, height: 60, color: Colors.grey[200], child: const Icon(Icons.fastfood, color: Colors.grey)),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              
+                              // Info Menu
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      item.menu?.name ?? "Menu #${item.menuId}",
+                                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                                      maxLines: 2, overflow: TextOverflow.ellipsis,
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      "${itemQty}x  ${currencyFormatter.format(itemPrice)}",
+                                      style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              
+                              // Total per Item
+                              Text(
+                                currencyFormatter.format(itemTotal),
+                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                              ),
+                            ],
+                          );
+                        },
+                      ),
+              ),
+
+              // Footer Sheet: Grand Total
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, -5))]
+                ),
+                child: SafeArea(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text("Total Pembayaran", style: TextStyle(fontWeight: FontWeight.bold)),
+                      Text(currencyFormatter.format(order.total),
+                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFFFF7F27))),
+                    ],
+                  ),
+                ),
+              ),
             ],
           ),
-          const SizedBox(height: 16),
-          
-          // Footer: Total & Action Button
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text("Total Belanja", style: TextStyle(fontSize: 10, color: Colors.grey)),
-                  Text(currencyFormatter.format(order.total), style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
-                ],
-              ),
-              
-              // Tombol Action dinamis
-              if (order.status == 'PENDING')
-                ElevatedButton(
-                  onPressed: () {
-                    // Masuk ke Payment Page lagi
-                    // Kita perlu kirim OrderModel
-                    context.pushNamed(
-                      'payment', 
-                      pathParameters: {'orderId': order.orderId.toString()},
-                      extra: order
-                    );
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFFF7F27),
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))
-                  ),
-                  child: const Text("Bayar", style: TextStyle(color: Colors.white, fontSize: 12)),
-                )
-              else
-                 OutlinedButton(
-                  onPressed: () {
-                    // TODO: Arahkan ke Halaman Detail Transaksi
-                    // context.push('/buyer/home/history-detail', extra: order);
-                  },
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                    side: BorderSide(color: Colors.grey.shade300)
-                  ),
-                  child: const Text("Detail", style: TextStyle(color: Colors.black, fontSize: 12)),
-                )
-            ],
-          )
-        ],
-      ),
+        );
+      },
     );
   }
 }

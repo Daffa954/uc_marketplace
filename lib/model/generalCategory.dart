@@ -9,9 +9,14 @@ class GeneralCategoryModel {
 
   factory GeneralCategoryModel.fromJson(Map<String, dynamic> json) {
     return GeneralCategoryModel(
-      generalCategoryId: json['Generalcategory_id'],
+      generalCategoryId: json['general_category_id'],
       name: json['name'],
       imageUrl: json['image_url'],
     );
   }
+  Map<String, dynamic> toJson() => {
+    'general_category_id': generalCategoryId,
+    'name': name,
+    'image_url': imageUrl,
+  };
 }

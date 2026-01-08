@@ -54,6 +54,9 @@ class _PreOrderDetailPageState extends State<PreOrderDetailPage> {
       isOpen = DateTime.now().isBefore(closeDate);
     }
 
+    // [BARU] Ambil URL Gambar
+    final String? imageUrl = widget.preOrder.image;
+
     return Scaffold(
       backgroundColor: Colors.white,
       body: Stack(
@@ -66,12 +69,28 @@ class _PreOrderDetailPageState extends State<PreOrderDetailPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // A. HEADER IMAGE
-                Image.network(
-                  "https://placehold.co/600x400/png?text=${Uri.encodeComponent(widget.preOrder.name)}",
+                // [PERBAIKAN] A. HEADER IMAGE (ASLI)
+                SizedBox( // Bungkus dengan SizedBox agar tinggi pasti
                   width: double.infinity,
                   height: 250,
-                  fit: BoxFit.cover,
+                  child: (imageUrl != null && imageUrl.isNotEmpty)
+                      ? Image.network(
+                          imageUrl,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return _buildImagePlaceholder(); // Placeholder jika error
+                          },
+                          loadingBuilder: (context, child, loadingProgress) {
+                            if (loadingProgress == null) return child;
+                            return Container(
+                              color: Colors.grey[200],
+                              child: const Center(
+                                child: CircularProgressIndicator(color: Color(0xFFFF7F27)),
+                              ),
+                            );
+                          },
+                        )
+                      : _buildImagePlaceholder(), // Placeholder jika null
                 ),
 
                 // B. KONTEN DETAIL
@@ -163,10 +182,8 @@ class _PreOrderDetailPageState extends State<PreOrderDetailPage> {
                         builder: (context, poVM, child) {
                           final pickups = poVM.pickupList;
 
-                          // Jika data belum ada atau kosong
-                          if (pickups.isEmpty) return Text("KOSONG");
+                          if (pickups.isEmpty) return const SizedBox.shrink();
 
-                          // Ambil data pertama sebagai preview utama
                           final firstPickup = pickups.first;
                           final extraCount = pickups.length - 1;
 
@@ -215,7 +232,6 @@ class _PreOrderDetailPageState extends State<PreOrderDetailPage> {
                                   ],
                                 ),
                                 const SizedBox(height: 8),
-                                // Alamat
                                 Row(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
@@ -235,7 +251,6 @@ class _PreOrderDetailPageState extends State<PreOrderDetailPage> {
                                   ],
                                 ),
                                 const SizedBox(height: 6),
-                                // Waktu Pickup
                                 Row(
                                   children: [
                                     const Icon(
@@ -292,14 +307,13 @@ class _PreOrderDetailPageState extends State<PreOrderDetailPage> {
                           return ListView.separated(
                             shrinkWrap: true,
                             physics:
-                                const NeverScrollableScrollPhysics(), // Scroll ikut parent
+                                const NeverScrollableScrollPhysics(),
                             itemCount: poVM.selectedPOMenus.length,
                             separatorBuilder: (context, index) =>
                                 const SizedBox(height: 12),
                             itemBuilder: (context, index) {
                               final menu = poVM.selectedPOMenus[index];
 
-                              // Widget Horizontal Card yang sudah kita buat sebelumnya
                               return PreOrderMenuHorizontalCard(
                                 menu: menu,
                                 onTap: () {
@@ -328,7 +342,7 @@ class _PreOrderDetailPageState extends State<PreOrderDetailPage> {
                                           ),
                                         );
                                       }
-                                    : () {}, // Disable jika tutup
+                                    : () {},
                               );
                             },
                           );
@@ -347,7 +361,6 @@ class _PreOrderDetailPageState extends State<PreOrderDetailPage> {
             left: 16,
             child: CircleAvatar(
               backgroundColor: Colors.white,
-
               child: IconButton(
                 icon: const Icon(Icons.arrow_back, color: Colors.black),
                 onPressed: () => context.pop(),
@@ -355,7 +368,7 @@ class _PreOrderDetailPageState extends State<PreOrderDetailPage> {
             ),
           ),
 
-          // --- 2b. TOMBOL CHAT (BUYER TO SELLER) ---
+          // --- 2b. TOMBOL CHAT ---
           Positioned(
             top: 50,
             right: 16,
@@ -390,7 +403,6 @@ class _PreOrderDetailPageState extends State<PreOrderDetailPage> {
                   }
 
                   try {
-                    // 1. Get Restaurant to find OwnerId
                     final restaurantRepo = RestaurantRepository();
                     final restaurant = await restaurantRepo.getRestaurantById(
                       widget.preOrder.restaurantId!,
@@ -407,20 +419,16 @@ class _PreOrderDetailPageState extends State<PreOrderDetailPage> {
                       return;
                     }
 
-                    // 2. Create Chat via ViewModel
                     if (context.mounted) {
                       final chatVM = Provider.of<ChatViewModel>(
                         context,
                         listen: false,
                       );
-                      // Gunakan method 'createChatWithSeller' yang sudah dibuat
-                      // Logic: Resolve Owner UUID -> Owner Int ID (via RPC/Query) -> Create/Get Chat Room
                       final chatId = await chatVM.createChatWithSeller(
-                        restaurant.ownerId!, // UUID seller
-                        currentUser.userId!, // Int buyer
+                        restaurant.ownerId!,
+                        currentUser.userId!,
                       );
 
-                      // 3. Navigate to Chat Detail
                       if (context.mounted) {
                         context.push(
                           '/buyer/chat/detail',
@@ -448,20 +456,17 @@ class _PreOrderDetailPageState extends State<PreOrderDetailPage> {
               right: 16,
               child: GestureDetector(
                 onTap: () {
-                  // Ambil data Pickup List dari ViewModel untuk dikirim
                   final pickupList = Provider.of<PreOrderViewModel>(
                     context,
                     listen: false,
                   ).pickupList;
 
-                  // Navigasi ke Checkout dengan data lengkap
                   context.push(
                     '/buyer/home/checkout',
                     extra: {
                       'preOrder': widget.preOrder,
                       'items': _cartItems,
-                      'pickupList':
-                          pickupList, // <-- PENTING: Kirim List Pickup
+                      'pickupList': pickupList,
                     },
                   );
                 },
@@ -483,7 +488,6 @@ class _PreOrderDetailPageState extends State<PreOrderDetailPage> {
                   ),
                   child: Row(
                     children: [
-                      // Badge Jumlah Item
                       Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
@@ -499,8 +503,6 @@ class _PreOrderDetailPageState extends State<PreOrderDetailPage> {
                         ),
                       ),
                       const SizedBox(width: 12),
-
-                      // Info Total Harga
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -521,10 +523,7 @@ class _PreOrderDetailPageState extends State<PreOrderDetailPage> {
                           ),
                         ],
                       ),
-
                       const Spacer(),
-
-                      // Label Checkout
                       const Text(
                         "Checkout",
                         style: TextStyle(
@@ -544,7 +543,7 @@ class _PreOrderDetailPageState extends State<PreOrderDetailPage> {
     );
   }
 
-  // Helper Widget Info Kecil
+  // Helper Widget: Info Kecil
   Widget _buildInfoItem(IconData icon, String label, String value) {
     return Column(
       children: [
@@ -564,6 +563,30 @@ class _PreOrderDetailPageState extends State<PreOrderDetailPage> {
           style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
         ),
       ],
+    );
+  }
+
+  // Helper Widget: Placeholder Gambar
+  Widget _buildImagePlaceholder() {
+    return Container(
+      width: double.infinity,
+      height: 250,
+      decoration: BoxDecoration(
+        color: const Color(0xFFFF7F27).withOpacity(0.1),
+      ),
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.image_not_supported_outlined, size: 50, color: Color(0xFFFF7F27)),
+            const SizedBox(height: 8),
+            Text(
+              widget.preOrder.name, // Menampilkan nama PO sebagai fallback
+              style: const TextStyle(color: Color(0xFFFF7F27), fontWeight: FontWeight.bold),
+            )
+          ],
+        ),
+      ),
     );
   }
 }

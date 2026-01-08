@@ -21,6 +21,44 @@ class MenuRepository {
       throw Exception('Gagal mengambil menu berdasarkan restoran: $e');
     }
   }
+Future<List<GeneralCategoryModel>> getGeneralCategories() async {
+  try {
+    // Debug: Cetak struktur tabel
+    debugPrint("Fetching general categories...");
+    
+    final data = await _supabase
+        .from('general_categories')
+        .select()
+        .order('name');
+    
+    // Debug: Cetak data yang diterima
+    debugPrint("Raw categories data: $data");
+    
+    if (data.isEmpty) {
+      debugPrint("No categories found in table 'general_categories'");
+      
+      // Coba cek tabel dengan nama berbeda
+      try {
+        final checkAlt = await _supabase
+            .from('general_category')
+            .select('count')
+            .limit(1);
+        debugPrint("Alternative table check: $checkAlt");
+      } catch (e) {
+        debugPrint("Alternative table also doesn't exist: $e");
+      }
+    }
+    
+    return (data as List).map((e) {
+      debugPrint("Mapping category: $e");
+      return GeneralCategoryModel.fromJson(e);
+    }).toList();
+  } catch (e) {
+    debugPrint("Error getting categories: $e");
+    // Return empty list instead of throwing
+    return [];
+  }
+}
 
   Future<String?> uploadMenuImage(XFile imageFile) async {
     try {
